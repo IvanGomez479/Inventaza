@@ -94,7 +94,7 @@ class _MyAppState extends State<MyApp> {
                   future: listadoPiezas,
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const CircularProgressIndicator();
+                      return const Row();
                     } else if (snapshot.hasData) {
                       listadoPiezasBuscador = snapshot.data!;
                       return TextField(

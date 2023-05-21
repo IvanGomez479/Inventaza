@@ -125,10 +125,11 @@ class _PiezaDetailState extends State<PiezaDetail> {
             flexibleSpace: Container(
               decoration: const BoxDecoration(
                   gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: <Color>[Colors.lightBlueAccent, Colors.blueAccent])),
-            )),
+                      begin: Alignment.topLeft,
+                      end: Alignment.topRight,
+                      colors: <Color>[Colors.lightBlueAccent, Colors.cyanAccent])),
+            )
+        ),
         floatingActionButton: FloatingActionButton(
           backgroundColor: Colors.redAccent,
           foregroundColor: Colors.white,
@@ -307,7 +308,7 @@ class _PiezaDetailState extends State<PiezaDetail> {
                                       style: const ButtonStyle(
                                         backgroundColor:
                                             MaterialStatePropertyAll(
-                                                Colors.blueAccent),
+                                                Colors.lightBlueAccent),
                                         elevation:
                                             MaterialStatePropertyAll(20.0),
                                         foregroundColor:
