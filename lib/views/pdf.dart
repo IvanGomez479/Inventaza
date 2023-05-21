@@ -48,6 +48,15 @@ class _PDFState extends State<PDF> {
                   Colors.cyanAccent
                 ])),
           )),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.lightBlueAccent,
+        foregroundColor: Colors.white,
+        onPressed: () async => {
+          await Printing.sharePdf(
+          bytes: archivoPdf, filename: 'Pieza-${widget.pieza.codPieza}.pdf'),
+      },
+        child: const Icon(Icons.share),
+      ),
       body: SafeArea(
           child: SingleChildScrollView(
         child: Column(
@@ -75,6 +84,11 @@ class _PDFState extends State<PDF> {
   Future<Uint8List> generarPDF() async {
     pdf = pw.Document();
 
+    final response = await http.get(Uri.parse(
+        'http://www.ies-azarquiel.es/paco/apiinventario/resources/photo/${widget.pieza.codModelo.toString()}.jpg'));
+    final bytes = response.bodyBytes;
+    final image = pw.MemoryImage(bytes);
+
     pdf.addPage(
       pw.MultiPage(
         header: _buildHeader,
@@ -82,12 +96,35 @@ class _PDFState extends State<PDF> {
         pageFormat: PdfPageFormat.a4,
         build: (context) => [
           pw.Column(
-            children: [pw.Row(
-              children: [
-
-              ]
-            )
-          ],
+            children: [
+              pw.Row(
+                children: [
+                  pw.Image(
+                    image,
+                    width: 450,
+                    height: 450,
+                  ),
+                ]
+              ),
+              pw.SizedBox(height: 20),
+              pw.Row(
+                children: [
+                  pw.Text(
+                      widget.pieza.identificador.toString(),
+                      style: const pw.TextStyle(fontSize: 20.0),
+                  ),
+                ]
+              ),
+              pw.SizedBox(height: 10),
+              pw.Row(
+                  children: [
+                    pw.Text(
+                      "Contenedor: ${widget.pieza.codPropietario}-${widget.pieza.codPieza}",
+                      style: const pw.TextStyle(fontSize: 20.0),
+                    ),
+                  ]
+              ),
+            ],
           ),
         ],
       ),
@@ -116,7 +153,7 @@ class _PDFState extends State<PDF> {
           ),
           pw.Container(
             height: 1,
-            color: PdfColors.green,
+            color: PdfColors.grey,
           ),
           pw.SizedBox(
             height: 10,
@@ -137,7 +174,7 @@ class _PDFState extends State<PDF> {
           pw.Text(
             'Página ${context.pageNumber} de ${context.pagesCount}',
             style: const pw.TextStyle(
-              fontSize: 20,
+              fontSize: 10,
               color: PdfColors.grey,
             ),
             textAlign: pw.TextAlign.right,
@@ -147,7 +184,7 @@ class _PDFState extends State<PDF> {
           ),
           pw.Container(
             height: 1,
-            color: PdfColors.green,
+            color: PdfColors.grey,
           ),
         ],
       ),
