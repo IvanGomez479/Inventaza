@@ -20,7 +20,8 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  late Future<List<Pieza>> listadoPiezas;
+  late List<Pieza> listadoPiezas = [];
+  List<Pieza> listadoPiezasBuscador = [];
   final TextEditingController searchController = TextEditingController();
 
   Future<List<Pieza>> getPiezas() async {
@@ -48,8 +49,8 @@ class _MyAppState extends State<MyApp> {
           item["AltaPieza"],
         ));
       }
-
       return piezas;
+
     } else {
       throw Exception("Falló la conexión");
     }
@@ -57,11 +58,13 @@ class _MyAppState extends State<MyApp> {
 
   @override
   void initState() {
-    super.initState();
-    listadoPiezas = getPiezas();
+    getPiezas().then((value) {
+      setState(() {
+        listadoPiezas.addAll(value);
+        listadoPiezasBuscador = listadoPiezas;
+      });
+    });
   }
-
-  List<Pieza> listadoPiezasBuscador = [];
 
   @override
   Widget build(BuildContext context) {
@@ -89,44 +92,29 @@ class _MyAppState extends State<MyApp> {
             children: [
               Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: FutureBuilder<List<Pieza>>(
-                  future: listadoPiezas,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Row();
-                    } else if (snapshot.hasData) {
-                      listadoPiezasBuscador = snapshot.data!;
-                      return TextField(
-                        onChanged: (value) {
+                child: TextField(
+                        onChanged: (text) {
+                          text = text.toLowerCase();
                           setState(() {
-                            // Filtrar la lista según el valor de búsqueda
-                            listadoPiezasBuscador = snapshot.data!
-                                .where((item) => item
-                                .toString().toLowerCase()
-                                .contains(value.toLowerCase()))
-                                .toList();
+                            listadoPiezasBuscador = listadoPiezas.where((pieza) {
+                              var noteTitle = pieza.codPieza.toString().toLowerCase();
+                              return noteTitle.startsWith(text);
+                            }).toList();
                           });
                         },
                         decoration: const InputDecoration(
                           labelText: 'Buscar',
                           prefixIcon: Icon(Icons.search),
                         ),
-                      );
-                    } else if (snapshot.hasError) {
-                      return Text('Error: ${snapshot.error}');
-                    } else {
-                      return Text('No hay datos');
-                    }
-                  },
+                      ),
                 ),
-              ),
               Expanded(
                 child: FutureBuilder(
-                    future: listadoPiezas,
+                    future: getPiezas(),
                     builder: (BuildContext context, AsyncSnapshot snapshot) {
                       if (snapshot.hasData) {
                         return ListView(
-                          children: listPiezas(snapshot.data),
+                          children: listadoPiezas == 0 ? listPiezas(snapshot.data) : listPiezas(listadoPiezasBuscador),
                         );
                       } else if (snapshot.hasError) {
                         if (kDebugMode) {
@@ -141,23 +129,23 @@ class _MyAppState extends State<MyApp> {
               ),
             ],
           )
-      ),
+      )
     );
   }
 
 
 
-  List<Widget> listPiezas(List<Pieza>? data) {
+  List<Widget> listPiezas(List<Pieza> data) {
     List<Widget> piezas = [];
     final context = MyApp.navKey.currentState?.overlay?.context;
 
-    for (var pieza in data!) {
+    for (var pieza in data) {
       piezas.add(Flex(
         direction: Axis.horizontal,
         children: [
           Flexible(
             child: Card(
-                margin: EdgeInsets.all(6.0),
+                margin: const EdgeInsets.all(6.0),
                 shadowColor: Colors.grey,
                 elevation: 10.0,
                 shape: RoundedRectangleBorder(
@@ -185,7 +173,7 @@ class _MyAppState extends State<MyApp> {
                                     Row(
                                       children: [
                                         Text(
-                                          "PIEZA: ${pieza.codPropietario.toString()}-${pieza.codPiezaPadre.toString()}-${pieza.codNIF.toString()}",
+                                          "PIEZA: ${pieza.codPropietario.toString()}-${pieza.codPieza.toString()}-${pieza.codNIF.toString()}",
                                           style: const TextStyle(
                                             fontSize: 18.2,
                                           ),
@@ -205,7 +193,7 @@ class _MyAppState extends State<MyApp> {
                                     Row(
                                       children: [
                                         Text(
-                                          "Contenedor: ${pieza.codPropietario.toString()}-${pieza.codPropietarioPadre.toString()}",
+                                          "Contenedor: ${pieza.codPropietarioPadre.toString()==null ? "00":"00"}-${pieza.codPiezaPadre.toString()}",
                                           textScaleFactor: 1.0,
                                         ),
                                       ],

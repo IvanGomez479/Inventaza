@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -9,6 +10,7 @@ import 'package:printing/printing.dart';
 import 'package:http/http.dart' as http;
 
 import '../models/Pieza.dart';
+import '../models/PiezaView.dart';
 
 class PDF extends StatefulWidget {
   late Pieza pieza;
@@ -22,14 +24,41 @@ class _PDFState extends State<PDF> {
   late pw.Document pdf;
   late PdfImage imagen;
   late Uint8List archivoPdf;
+  late Future<PiezaView> piezaView;
 
   @override
   void initState() {
     initPDF();
+    piezaView = getPieza();
   }
 
   Future<void> initPDF() async {
     archivoPdf = await generarPDF();
+  }
+
+  Future<PiezaView> getPieza() async {
+    late String codPieza;
+
+    if (widget.pieza.codPropietarioPadre == null) {
+      codPieza = "00${widget.pieza.codPiezaPadre.toString()}${widget.pieza.codNIF.toString()}";
+    } else {
+      codPieza = "${widget.pieza.codPropietarioPadre.toString()}${widget.pieza.codPieza.toString()}${widget.pieza.codNIF.toString()}";
+    }
+    var url = Uri.parse(
+        "http://www.ies-azarquiel.es/paco/apiinventario/pieza/$codPieza");
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      String body = utf8.decode(response.bodyBytes);
+
+      final jsonData = jsonDecode(body);
+
+      final piezaView = PiezaView.fromJson(jsonData);
+
+      return piezaView;
+    } else {
+      throw Exception("Falló la conexión");
+    }
   }
 
   @override
@@ -53,7 +82,7 @@ class _PDFState extends State<PDF> {
         foregroundColor: Colors.white,
         onPressed: () async => {
           await Printing.sharePdf(
-          bytes: archivoPdf, filename: 'Pieza-${widget.pieza.codPieza}.pdf'),
+          bytes: archivoPdf, filename: 'Pieza-${widget.pieza.codPieza.toString()}.pdf'),
       },
         child: const Icon(Icons.share),
       ),
@@ -119,7 +148,16 @@ class _PDFState extends State<PDF> {
               pw.Row(
                   children: [
                     pw.Text(
-                      "Contenedor: ${widget.pieza.codPropietario}-${widget.pieza.codPieza}",
+                      "Contenedor: ${widget.pieza.codPropietarioPadre.toString()==null ? "00":"00"}-${widget.pieza.codPieza}",
+                      style: const pw.TextStyle(fontSize: 20.0),
+                    ),
+                  ]
+              ),
+              pw.SizedBox(height: 10),
+              pw.Row(
+                  children: [
+                    pw.Text(
+                      "Modelo: ${""}-${widget.pieza.codPieza}",
                       style: const pw.TextStyle(fontSize: 20.0),
                     ),
                   ]

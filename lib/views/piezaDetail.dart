@@ -21,18 +21,24 @@ class PiezaDetail extends StatefulWidget {
 }
 
 class _PiezaDetailState extends State<PiezaDetail> {
-  late Future<List<Pieza>> listadoPiezas;
+  late List<Pieza> listadoPiezas = [];
+  List<Pieza> listadoPiezasBuscador = [];
+  final TextEditingController searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    listadoPiezas = getPiezas();
+    getPiezas().then((value) {
+      setState(() {
+        listadoPiezas.addAll(value);
+        listadoPiezasBuscador = listadoPiezas;
+      });
+    });
   }
 
   void actualizarPiezas(Pieza pieza) {
     setState(() {
       widget.pieza = pieza;
-      listadoPiezas = getPiezasHijas(pieza);
     });
   }
 
@@ -41,11 +47,9 @@ class _PiezaDetailState extends State<PiezaDetail> {
     if (widget.pieza.codPropietarioPadre == null) {
       codPieza = "00${widget.pieza.codPiezaPadre.toString()}";
     } else {
-      codPieza =
-          "${widget.pieza.codPropietarioPadre.toString()}${widget.pieza.codPieza.toString()}";
+      codPieza = "${widget.pieza.codPropietarioPadre.toString()}${widget.pieza.codPieza.toString()}";
     }
-    var url = Uri.parse(
-        "http://www.ies-azarquiel.es/paco/apiinventario/padre/$codPieza/pieza");
+    var url = Uri.parse("http://www.ies-azarquiel.es/paco/apiinventario/padre/$codPieza/pieza");
     final response = await http.get(url);
 
     List<Pieza> piezas = [];
@@ -70,6 +74,7 @@ class _PiezaDetailState extends State<PiezaDetail> {
         ));
       }
       return piezas;
+
     } else {
       throw Exception("Falló la conexión");
     }
@@ -109,6 +114,7 @@ class _PiezaDetailState extends State<PiezaDetail> {
         ));
       }
       return piezas;
+
     } else {
       throw Exception("Falló la conexión");
     }
@@ -142,28 +148,19 @@ class _PiezaDetailState extends State<PiezaDetail> {
           children: [
             Padding(
               padding: const EdgeInsets.all(8.0),
-              child: Container(
-                // Add padding around the search bar
-                padding: const EdgeInsets.symmetric(horizontal: 5.0),
-                // Use a Material design search bar
-                child: TextField(
-                  decoration: InputDecoration(
-                    hintText: 'Search...',
-                    // Add a clear button to the search bar
-                    suffixIcon: IconButton(
-                      icon: const Icon(Icons.clear),
-                      onPressed: () => {},
-                    ),
-                    // Add a search icon or button to the search bar
-                    prefixIcon: IconButton(
-                      icon: const Icon(Icons.search),
-                      onPressed: () {},
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(15.0),
-                    ),
-                  ),
-                  //onChanged: ,
+              child: TextField(
+                onChanged: (text) {
+                  text = text.toLowerCase();
+                  setState(() {
+                    listadoPiezasBuscador = listadoPiezas.where((pieza) {
+                      var noteTitle = pieza.codPieza.toString().toLowerCase();
+                      return noteTitle.startsWith(text);
+                    }).toList();
+                  });
+                },
+                decoration: const InputDecoration(
+                  labelText: 'Buscar',
+                  prefixIcon: Icon(Icons.search),
                 ),
               ),
             ),
@@ -183,7 +180,7 @@ class _PiezaDetailState extends State<PiezaDetail> {
                           Row(
                             children: [
                               Text(
-                                "PIEZA: ${widget.pieza.codPropietario.toString()}-${widget.pieza.codPiezaPadre.toString()}-${widget.pieza.codNIF.toString()}",
+                                "PIEZA: ${widget.pieza.codPropietario.toString()}-${widget.pieza.codPieza.toString()}-${widget.pieza.codNIF.toString()}",
                                 textScaleFactor: 1.4,
                               ),
                             ],
@@ -213,11 +210,11 @@ class _PiezaDetailState extends State<PiezaDetail> {
                 )),
             Expanded(
               child: FutureBuilder(
-                  future: listadoPiezas,
+                  future: getPiezas(),
                   builder: (BuildContext context, AsyncSnapshot snapshot) {
                     if (snapshot.hasData) {
                       return ListView(
-                        children: listPiezas(snapshot.data),
+                        children: listadoPiezas == 0 ? listPiezas(snapshot.data) : listPiezas(listadoPiezasBuscador),
                       );
                     } else if (snapshot.hasError) {
                       if (kDebugMode) {
@@ -231,20 +228,21 @@ class _PiezaDetailState extends State<PiezaDetail> {
                   }),
             ),
           ],
-        ));
+        )
+    );
   }
 
-  List<Widget> listPiezas(List<Pieza>? data) {
+  List<Widget> listPiezas(List<Pieza> data) {
     List<Widget> piezas = [];
     final context = PiezaDetail.navKey.currentState?.context;
 
-    for (var pieza in data!) {
+    for (var pieza in data) {
       piezas.add(Flex(
         direction: Axis.horizontal,
         children: [
           Flexible(
             child: Card(
-                margin: EdgeInsets.all(6.0),
+                margin: const EdgeInsets.all(6.0),
                 shadowColor: Colors.grey,
                 elevation: 10.0,
                 child: Row(
@@ -267,7 +265,7 @@ class _PiezaDetailState extends State<PiezaDetail> {
                                 Row(
                                   children: [
                                     Text(
-                                      "PIEZA: ${pieza.codPropietario.toString()}-${pieza.codPiezaPadre.toString()}-${pieza.codNIF.toString()}",
+                                      "PIEZA: ${pieza.codPropietario.toString()}-${pieza.codPieza.toString()}-${pieza.codNIF.toString()}",
                                       style: const TextStyle(
                                         fontSize: 18.2,
                                       ),
@@ -287,7 +285,7 @@ class _PiezaDetailState extends State<PiezaDetail> {
                                 Row(
                                   children: [
                                     Text(
-                                      "Contenedor: ${pieza.codPropietario.toString()}-${pieza.codPropietarioPadre.toString()}",
+                                      "Contenedor: ${pieza.codPropietarioPadre.toString()}-${pieza.codPiezaPadre.toString()}",
                                       textScaleFactor: 1.0,
                                     ),
                                   ],
@@ -338,7 +336,7 @@ class _PiezaDetailState extends State<PiezaDetail> {
 
     // Creamos los botones
     Widget cancelButton = TextButton(
-      child: Text("Cancelar"),
+      child: const Text("Cancelar"),
       onPressed:  () {
         Navigator.pop(context);
       },
@@ -355,8 +353,8 @@ class _PiezaDetailState extends State<PiezaDetail> {
 
     // set up the AlertDialog
     AlertDialog alert = AlertDialog(
-      title: Text("PDF Generator"),
-      content: Text("¿Quieres generar un PDF de esta Pieza?"),
+      title: const Text("PDF Generator"),
+      content: const Text("¿Quieres generar un PDF de esta Pieza?"),
       actions: [
         cancelButton,
         continueButton,
