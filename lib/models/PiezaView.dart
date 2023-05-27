@@ -33,24 +33,4 @@ class PiezaView {
       this.descSubTipo,
       this.nombreFabricante,
       );
-
-  factory PiezaView.fromJson(Map<String?, dynamic> json) {
-    return PiezaView(
-      json['CodPropietarioPieza'],
-      json['CodPiezaPadre'],
-      json['CodPropietario'],
-      json['CodPieza'],
-      json['CodNIF'],
-      json['CodModelo'],
-      json['Identificador'],
-      json['Prestable'],
-      json['Contenedor'],
-      json['AltaPieza'],
-      json['DescPropietario'],
-      json['DescModelo'],
-      json['DescTipo'],
-      json['DescSubTipo'],
-      json['NombreFabricante'],
-    );
-  }
 }

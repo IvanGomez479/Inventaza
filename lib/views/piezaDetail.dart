@@ -13,6 +13,7 @@ import '../models/Pieza.dart';
 class PiezaDetail extends StatefulWidget {
   static final navKey = GlobalKey<NavigatorState>();
   late Pieza pieza;
+  late List<Pieza> piezas;
 
   PiezaDetail({required this.pieza});
 
@@ -39,55 +40,12 @@ class _PiezaDetailState extends State<PiezaDetail> {
   void actualizarPiezas(Pieza pieza) {
     setState(() {
       widget.pieza = pieza;
+      actualizarListPiezasByPieza(widget.pieza);
     });
   }
 
   Future<List<Pieza>> getPiezas() async {
-    late String codPieza;
-    if (widget.pieza.codPropietarioPadre == null) {
-      codPieza = "00${widget.pieza.codPiezaPadre.toString()}";
-    } else {
-      codPieza = "${widget.pieza.codPropietarioPadre.toString()}${widget.pieza.codPieza.toString()}";
-    }
-    var url = Uri.parse("http://www.ies-azarquiel.es/paco/apiinventario/padre/$codPieza/pieza");
-    final response = await http.get(url);
-
-    List<Pieza> piezas = [];
-
-    if (response.statusCode == 200) {
-      String body = utf8.decode(response.bodyBytes);
-
-      final jsonData = jsonDecode(body);
-
-      for (var item in jsonData["piezas"]) {
-        piezas.add(Pieza(
-          item["CodPropietarioPieza"],
-          item["CodPiezaPadre"],
-          item["CodPropietario"],
-          item["CodPieza"],
-          item["CodNIF"],
-          item["CodModelo"],
-          item["Identificador"],
-          item["Prestable"],
-          item["Contenedor"],
-          item["AltaPieza"],
-        ));
-      }
-      return piezas;
-
-    } else {
-      throw Exception("Falló la conexión");
-    }
-  }
-
-  Future<List<Pieza>> getPiezasHijas(Pieza pieza) async {
-    late String codPieza;
-    if (pieza.codPropietarioPadre == null) {
-      codPieza = "00${pieza.codPiezaPadre.toString()}";
-    } else {
-      codPieza =
-          "${pieza.codPropietarioPadre.toString()}${pieza.codPieza.toString()}";
-    }
+    final String codPieza = "${widget.pieza.codPropietarioPadre.toString()}${widget.pieza.codPiezaPadre.toString()}";
     var url = Uri.parse(
         "http://www.ies-azarquiel.es/paco/apiinventario/padre/$codPieza/pieza");
     final response = await http.get(url);
@@ -101,7 +59,7 @@ class _PiezaDetailState extends State<PiezaDetail> {
 
       for (var item in jsonData["piezas"]) {
         piezas.add(Pieza(
-          item["CodPropietarioPieza"],
+          item["CodPropietarioPadre"],
           item["CodPiezaPadre"],
           item["CodPropietario"],
           item["CodPieza"],
@@ -114,7 +72,39 @@ class _PiezaDetailState extends State<PiezaDetail> {
         ));
       }
       return piezas;
+    } else {
+      throw Exception("Falló la conexión");
+    }
+  }
 
+  Future<List<Pieza>> getPiezasHijas(Pieza pieza) async {
+    final String codPieza = "${widget.pieza.codPropietarioPadre.toString()}${widget.pieza.codPiezaPadre.toString()}";
+    var url = Uri.parse(
+        "http://www.ies-azarquiel.es/paco/apiinventario/padre/$codPieza/pieza");
+    final response = await http.get(url);
+
+    List<Pieza> piezas = [];
+
+    if (response.statusCode == 200) {
+      String body = utf8.decode(response.bodyBytes);
+
+      final jsonData = jsonDecode(body);
+
+      for (var item in jsonData["piezas"]) {
+        piezas.add(Pieza(
+          item["CodPropietarioPadre"],
+          item["CodPiezaPadre"],
+          item["CodPropietario"],
+          item["CodPieza"],
+          item["CodNIF"],
+          item["CodModelo"],
+          item["Identificador"],
+          item["Prestable"],
+          item["Contenedor"],
+          item["AltaPieza"],
+        ));
+      }
+      return piezas;
     } else {
       throw Exception("Falló la conexión");
     }
@@ -130,15 +120,15 @@ class _PiezaDetailState extends State<PiezaDetail> {
                   gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.topRight,
-                      colors: <Color>[Colors.lightBlueAccent, Colors.cyanAccent])),
-            )
-        ),
+                      colors: <Color>[
+                    Colors.lightBlueAccent,
+                    Colors.cyanAccent
+                  ])),
+            )),
         floatingActionButton: FloatingActionButton(
           backgroundColor: Colors.redAccent,
           foregroundColor: Colors.white,
-          onPressed: () => {
-            showDialogPDF(context)
-          },
+          onPressed: () => {showDialogPDF(context)},
           child: const Icon(Icons.picture_as_pdf_rounded),
         ),
         body: Column(
@@ -170,7 +160,7 @@ class _PiezaDetailState extends State<PiezaDetail> {
                   children: [
                     Image.network(
                       "http://www.ies-azarquiel.es/paco/apiinventario/resources/photo/${widget.pieza.codModelo.toString()}.jpg",
-                      height: 200,
+                      height: 100,
                     ),
                     Container(
                       padding: const EdgeInsets.all(15.0),
@@ -210,11 +200,13 @@ class _PiezaDetailState extends State<PiezaDetail> {
                 )),
             Expanded(
               child: FutureBuilder(
-                  future: getPiezas(),
+                  future: getPiezasHijas(widget.pieza),
                   builder: (BuildContext context, AsyncSnapshot snapshot) {
                     if (snapshot.hasData) {
                       return ListView(
-                        children: listadoPiezas == 0 ? listPiezas(snapshot.data) : listPiezas(listadoPiezasBuscador),
+                            children: listadoPiezas.length > 100
+                                ? actualizarListPiezasByPieza(widget.pieza)
+                                : listPiezas(listadoPiezasBuscador),
                       );
                     } else if (snapshot.hasError) {
                       if (kDebugMode) {
@@ -228,12 +220,119 @@ class _PiezaDetailState extends State<PiezaDetail> {
                   }),
             ),
           ],
-        )
-    );
+        ));
   }
 
   List<Widget> listPiezas(List<Pieza> data) {
     List<Widget> piezas = [];
+
+    for (var pieza in data) {
+      piezas.add(Flex(
+        direction: Axis.horizontal,
+        children: [
+          Flexible(
+            child: Card(
+                margin: const EdgeInsets.all(6.0),
+                shadowColor: Colors.grey,
+                elevation: 10.0,
+                child: Row(
+                  children: <Widget>[
+                    Expanded(
+                      flex: 5,
+                      child: Image.network(
+                          "http://www.ies-azarquiel.es/paco/apiinventario/resources/photo/${pieza.codModelo.toString()}.jpg"),
+                    ),
+                    Expanded(
+                        flex: 5,
+                        child: Wrap(children: <Widget>[
+                          Container(
+                            padding: const EdgeInsets.all(15.0),
+                            margin: const EdgeInsets.only(
+                                top: 0, right: 0, left: 0, bottom: 130.0),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.max,
+                              children: [
+                                Row(
+                                  children: [
+                                    Text(
+                                      "PIEZA: ${pieza.codPropietario.toString()}-${pieza.codPieza.toString()}-${pieza.codNIF.toString()}",
+                                      style: const TextStyle(
+                                        fontSize: 18.2,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Row(
+                                  children: [
+                                    Text(
+                                      pieza.identificador.toString(),
+                                      style: const TextStyle(
+                                        fontSize: 15,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Row(
+                                  children: [
+                                    Text(
+                                      "Contenedor: ${pieza.codPropietarioPadre.toString()}-${pieza.codPiezaPadre.toString()}",
+                                      textScaleFactor: 1.0,
+                                    ),
+                                  ],
+                                ),
+                                Row(
+                                  children: <Widget>[
+                                    TextButton(
+                                      onPressed: () => {
+                                        if (pieza.contenedor == "true")
+                                          {actualizarPiezas(pieza)}
+                                        else
+                                          {
+                                            showError(context),
+                                          }
+                                      },
+                                      style: const ButtonStyle(
+                                        backgroundColor:
+                                            MaterialStatePropertyAll(
+                                                Colors.lightBlueAccent),
+                                        elevation:
+                                            MaterialStatePropertyAll(20.0),
+                                        foregroundColor:
+                                            MaterialStatePropertyAll(
+                                                Colors.white),
+                                      ),
+                                      child: const Text(
+                                        "Detail",
+                                        style: TextStyle(
+                                          decorationColor: Colors.black,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          )
+                        ])),
+                  ],
+                )),
+          )
+        ],
+      ));
+    }
+    return piezas;
+  }
+
+
+
+  List<Widget> actualizarListPiezasByPieza(Pieza pieza) {
+    pieza = widget.pieza;
+    List<Widget> piezas = [];
+    List<Pieza> data = [];
+
+    getPiezasHijas(pieza).then((value) {
+        data.addAll(value);
+    });
     final context = PiezaDetail.navKey.currentState?.context;
 
     for (var pieza in data) {
@@ -296,19 +395,20 @@ class _PiezaDetailState extends State<PiezaDetail> {
                                       onPressed: () => {
                                         if (pieza.contenedor == "true")
                                           {actualizarPiezas(pieza)}
-                                        else {
-                                          showError(context!),
-                                        }
+                                        else
+                                          {
+                                            showError(context!),
+                                          }
                                       },
                                       style: const ButtonStyle(
                                         backgroundColor:
-                                            MaterialStatePropertyAll(
-                                                Colors.lightBlueAccent),
+                                        MaterialStatePropertyAll(
+                                            Colors.lightBlueAccent),
                                         elevation:
-                                            MaterialStatePropertyAll(20.0),
+                                        MaterialStatePropertyAll(20.0),
                                         foregroundColor:
-                                            MaterialStatePropertyAll(
-                                                Colors.white),
+                                        MaterialStatePropertyAll(
+                                            Colors.white),
                                       ),
                                       child: const Text(
                                         "Detail",
@@ -333,17 +433,16 @@ class _PiezaDetailState extends State<PiezaDetail> {
   }
 
   void showDialogPDF(BuildContext context) {
-
     // Creamos los botones
     Widget cancelButton = TextButton(
       child: const Text("Cancelar"),
-      onPressed:  () {
+      onPressed: () {
         Navigator.pop(context);
       },
     );
     Widget continueButton = TextButton(
       child: const Text("Continuar"),
-      onPressed:  () {
+      onPressed: () {
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => PDF(pieza: widget.pieza)),
@@ -396,8 +495,6 @@ void showError(BuildContext context) {
     },
   );
 }
-
-
 
 Future<void> generatePDF(Pieza pieza) async {
   final pdf = pw.Document();

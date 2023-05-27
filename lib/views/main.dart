@@ -37,7 +37,7 @@ class _MyAppState extends State<MyApp> {
 
       for (var item in jsonData["piezas"]) {
         piezas.add(Pieza(
-          item["CodPropietarioPieza"],
+          item["CodPropietarioPadre"],
           item["CodPiezaPadre"],
           item["CodPropietario"],
           item["CodPieza"],
@@ -193,7 +193,7 @@ class _MyAppState extends State<MyApp> {
                                     Row(
                                       children: [
                                         Text(
-                                          "Contenedor: ${pieza.codPropietarioPadre.toString()==null ? "00":"00"}-${pieza.codPiezaPadre.toString()}",
+                                          "Contenedor: ${pieza.codPropietarioPadre.toString()}-${pieza.codPiezaPadre.toString()}",
                                           textScaleFactor: 1.0,
                                         ),
                                       ],

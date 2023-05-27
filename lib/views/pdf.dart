@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:pdf/pdf.dart';
 
@@ -24,12 +25,16 @@ class _PDFState extends State<PDF> {
   late pw.Document pdf;
   late PdfImage imagen;
   late Uint8List archivoPdf;
-  late Future<PiezaView> piezaView;
+  late PiezaView piezaView;
 
   @override
   void initState() {
     initPDF();
-    piezaView = getPieza();
+    getPieza().then((value) {
+      setState(() {
+        piezaView = value;
+      });
+    });
   }
 
   Future<void> initPDF() async {
@@ -37,13 +42,8 @@ class _PDFState extends State<PDF> {
   }
 
   Future<PiezaView> getPieza() async {
-    late String codPieza;
+    final String codPieza = "${widget.pieza.codPropietarioPadre.toString()}${widget.pieza.codPieza.toString()}${widget.pieza.codNIF.toString()}";
 
-    if (widget.pieza.codPropietarioPadre == null) {
-      codPieza = "00${widget.pieza.codPiezaPadre.toString()}${widget.pieza.codNIF.toString()}";
-    } else {
-      codPieza = "${widget.pieza.codPropietarioPadre.toString()}${widget.pieza.codPieza.toString()}${widget.pieza.codNIF.toString()}";
-    }
     var url = Uri.parse(
         "http://www.ies-azarquiel.es/paco/apiinventario/pieza/$codPieza");
     final response = await http.get(url);
@@ -53,7 +53,23 @@ class _PDFState extends State<PDF> {
 
       final jsonData = jsonDecode(body);
 
-      final piezaView = PiezaView.fromJson(jsonData);
+      final piezaView = PiezaView(
+        jsonData['pieza']['CodPropietarioPadre'],
+        jsonData['pieza']['CodPiezaPadre'],
+        jsonData['pieza']['CodPropietario'],
+        jsonData['pieza']['CodPieza'],
+        jsonData['pieza']['CodNIF'],
+        jsonData['pieza']['CodModelo'],
+        jsonData['pieza']['Identificador'],
+        jsonData['pieza']['Prestable'],
+        jsonData['pieza']['Contenedor'],
+        jsonData['pieza']['AltaPieza'],
+        jsonData['propietario']['DescPropietario'],
+        jsonData['modelo']['DescModelo'],
+        jsonData['tipo']['DescTipo'],
+        jsonData['subtipo']['DescSubTipo'],
+        jsonData['fabricante']['NombreFabricante'],
+      );
 
       return piezaView;
     } else {
@@ -82,15 +98,16 @@ class _PDFState extends State<PDF> {
         foregroundColor: Colors.white,
         onPressed: () async => {
           await Printing.sharePdf(
-          bytes: archivoPdf, filename: 'Pieza-${widget.pieza.codPieza.toString()}.pdf'),
-      },
+              bytes: archivoPdf,
+              filename: 'Pieza-${widget.pieza.codPieza.toString()}.pdf'),
+        },
         child: const Icon(Icons.share),
       ),
       body: SafeArea(
           child: SingleChildScrollView(
         child: Column(
           children: [
-            Container(
+            SizedBox(
               height: 540,
               width: double.maxFinite,
               child: Padding(
@@ -126,42 +143,50 @@ class _PDFState extends State<PDF> {
         build: (context) => [
           pw.Column(
             children: [
-              pw.Row(
-                children: [
-                  pw.Image(
-                    image,
-                    width: 450,
-                    height: 450,
-                  ),
-                ]
-              ),
+              pw.Row(children: [
+                pw.Image(
+                  image,
+                  width: 450,
+                  height: 450,
+                ),
+              ]),
               pw.SizedBox(height: 20),
-              pw.Row(
-                children: [
-                  pw.Text(
-                      widget.pieza.identificador.toString(),
-                      style: const pw.TextStyle(fontSize: 20.0),
+              pw.Row(children: [
+                pw.Text(
+                  piezaView.descPropietario.toString(),
+                  style: const pw.TextStyle(
+                      fontSize: 20.0,
                   ),
-                ]
-              ),
+                ),
+              ]),
               pw.SizedBox(height: 10),
-              pw.Row(
-                  children: [
-                    pw.Text(
-                      "Contenedor: ${widget.pieza.codPropietarioPadre.toString()==null ? "00":"00"}-${widget.pieza.codPieza}",
-                      style: const pw.TextStyle(fontSize: 20.0),
-                    ),
-                  ]
-              ),
+              pw.Row(children: [
+                pw.Text(
+                  "Modelo: ${piezaView.descModelo}",
+                  style: const pw.TextStyle(fontSize: 15.0),
+                ),
+              ]),
               pw.SizedBox(height: 10),
-              pw.Row(
-                  children: [
-                    pw.Text(
-                      "Modelo: ${""}-${widget.pieza.codPieza}",
-                      style: const pw.TextStyle(fontSize: 20.0),
-                    ),
-                  ]
-              ),
+              pw.Row(children: [
+                pw.Text(
+                  "Contenedor: ${piezaView.identificador}",
+                  style: const pw.TextStyle(fontSize: 15.0),
+                ),
+              ]),
+              pw.SizedBox(height: 10),
+              pw.Row(children: [
+                pw.Text(
+                  "Tipo: ${piezaView.descTipo} - ${piezaView.descSubTipo}",
+                  style: const pw.TextStyle(fontSize: 15.0),
+                ),
+              ]),
+              pw.SizedBox(height: 10),
+              pw.Row(children: [
+                pw.Text(
+                  "Fabricante: ${piezaView.nombreFabricante}",
+                  style: const pw.TextStyle(fontSize: 15.0),
+                ),
+              ]),
             ],
           ),
         ],
@@ -181,8 +206,7 @@ class _PDFState extends State<PDF> {
           pw.Text(
             "PIEZA: ${widget.pieza.codPropietario.toString()}-${widget.pieza.codPiezaPadre.toString()}-${widget.pieza.codNIF.toString()}",
             style: const pw.TextStyle(
-              fontSize: 35,
-              decorationStyle: pw.TextDecorationStyle.solid,
+              fontSize: 30,
               color: PdfColors.black,
             ),
           ),
