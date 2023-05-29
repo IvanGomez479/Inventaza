@@ -25,11 +25,13 @@ class _PiezaDetailState extends State<PiezaDetail> {
   late List<Pieza> listadoPiezas = [];
   List<Pieza> listadoPiezasBuscador = [];
   final TextEditingController searchController = TextEditingController();
+  late List<Widget> piezas = [];
+  late List<Pieza> data = [];
 
   @override
   void initState() {
     super.initState();
-    getPiezas().then((value) {
+    getPiezasHijas(widget.pieza).then((value) {
       setState(() {
         listadoPiezas.addAll(value);
         listadoPiezasBuscador = listadoPiezas;
@@ -40,12 +42,13 @@ class _PiezaDetailState extends State<PiezaDetail> {
   void actualizarPiezas(Pieza pieza) {
     setState(() {
       widget.pieza = pieza;
-      actualizarListPiezasByPieza(widget.pieza);
+      listadoPiezas = listaPiezasActualizada(widget.pieza);
     });
   }
 
   Future<List<Pieza>> getPiezas() async {
-    final String codPieza = "${widget.pieza.codPropietarioPadre.toString()}${widget.pieza.codPiezaPadre.toString()}";
+    final String codPieza =
+        "${widget.pieza.codPropietarioPadre.toString()}${widget.pieza.codPiezaPadre.toString()}";
     var url = Uri.parse(
         "http://www.ies-azarquiel.es/paco/apiinventario/padre/$codPieza/pieza");
     final response = await http.get(url);
@@ -78,7 +81,8 @@ class _PiezaDetailState extends State<PiezaDetail> {
   }
 
   Future<List<Pieza>> getPiezasHijas(Pieza pieza) async {
-    final String codPieza = "${widget.pieza.codPropietarioPadre.toString()}${widget.pieza.codPiezaPadre.toString()}";
+    final String codPieza =
+        "${pieza.codPropietario.toString()}${pieza.codPieza.toString()}";
     var url = Uri.parse(
         "http://www.ies-azarquiel.es/paco/apiinventario/padre/$codPieza/pieza");
     final response = await http.get(url);
@@ -204,9 +208,9 @@ class _PiezaDetailState extends State<PiezaDetail> {
                   builder: (BuildContext context, AsyncSnapshot snapshot) {
                     if (snapshot.hasData) {
                       return ListView(
-                            children: listadoPiezas.length > 100
-                                ? actualizarListPiezasByPieza(widget.pieza)
-                                : listPiezas(listadoPiezasBuscador),
+                        children: //text == ""
+                             listPiezas(snapshot.data)
+                            //: listPiezas(listadoPiezasBuscador),
                       );
                     } else if (snapshot.hasError) {
                       if (kDebugMode) {
@@ -323,114 +327,120 @@ class _PiezaDetailState extends State<PiezaDetail> {
     return piezas;
   }
 
-
-
-  List<Widget> actualizarListPiezasByPieza(Pieza pieza) {
-    pieza = widget.pieza;
-    List<Widget> piezas = [];
-    List<Pieza> data = [];
-
+  List<Pieza> listaPiezasActualizada(Pieza pieza) {
     getPiezasHijas(pieza).then((value) {
-        data.addAll(value);
+      data.addAll(value);
     });
-    final context = PiezaDetail.navKey.currentState?.context;
 
-    for (var pieza in data) {
-      piezas.add(Flex(
-        direction: Axis.horizontal,
-        children: [
-          Flexible(
-            child: Card(
-                margin: const EdgeInsets.all(6.0),
-                shadowColor: Colors.grey,
-                elevation: 10.0,
-                child: Row(
-                  children: <Widget>[
-                    Expanded(
-                      flex: 5,
-                      child: Image.network(
-                          "http://www.ies-azarquiel.es/paco/apiinventario/resources/photo/${pieza.codModelo.toString()}.jpg"),
-                    ),
-                    Expanded(
-                        flex: 5,
-                        child: Wrap(children: <Widget>[
-                          Container(
-                            padding: const EdgeInsets.all(15.0),
-                            margin: const EdgeInsets.only(
-                                top: 0, right: 0, left: 0, bottom: 130.0),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.max,
-                              children: [
-                                Row(
-                                  children: [
-                                    Text(
-                                      "PIEZA: ${pieza.codPropietario.toString()}-${pieza.codPieza.toString()}-${pieza.codNIF.toString()}",
-                                      style: const TextStyle(
-                                        fontSize: 18.2,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                Row(
-                                  children: [
-                                    Text(
-                                      pieza.identificador.toString(),
-                                      style: const TextStyle(
-                                        fontSize: 15,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                Row(
-                                  children: [
-                                    Text(
-                                      "Contenedor: ${pieza.codPropietarioPadre.toString()}-${pieza.codPiezaPadre.toString()}",
-                                      textScaleFactor: 1.0,
-                                    ),
-                                  ],
-                                ),
-                                Row(
-                                  children: <Widget>[
-                                    TextButton(
-                                      onPressed: () => {
-                                        if (pieza.contenedor == "true")
-                                          {actualizarPiezas(pieza)}
-                                        else
-                                          {
-                                            showError(context!),
-                                          }
-                                      },
-                                      style: const ButtonStyle(
-                                        backgroundColor:
-                                        MaterialStatePropertyAll(
-                                            Colors.lightBlueAccent),
-                                        elevation:
-                                        MaterialStatePropertyAll(20.0),
-                                        foregroundColor:
-                                        MaterialStatePropertyAll(
-                                            Colors.white),
-                                      ),
-                                      child: const Text(
-                                        "Detail",
-                                        style: TextStyle(
-                                          decorationColor: Colors.black,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          )
-                        ])),
-                  ],
-                )),
-          )
-        ],
-      ));
-    }
-    return piezas;
+    return data;
   }
+
+  // List<Widget> actualizarListPiezasByPieza(Pieza pieza) {
+  //
+  //   getPiezasHijas(pieza).then((value) {
+  //       data.addAll(value);
+  //   });
+  //   //final context = PiezaDetail.navKey.currentState?.context;
+  //   int longitudData = data.length;
+  //
+  //   piezas = listPiezas(data);
+  //
+  //   for (var pieza in data) {
+  //     piezas.add(Flex(
+  //       direction: Axis.horizontal,
+  //       children: [
+  //         Flexible(
+  //           child: Card(
+  //               margin: const EdgeInsets.all(6.0),
+  //               shadowColor: Colors.grey,
+  //               elevation: 10.0,
+  //               child: Row(
+  //                 children: <Widget>[
+  //                   Expanded(
+  //                     flex: 5,
+  //                     child: Image.network(
+  //                         "http://www.ies-azarquiel.es/paco/apiinventario/resources/photo/${pieza.codModelo.toString()}.jpg"),
+  //                   ),
+  //                   Expanded(
+  //                       flex: 5,
+  //                       child: Wrap(children: <Widget>[
+  //                         Container(
+  //                           padding: const EdgeInsets.all(15.0),
+  //                           margin: const EdgeInsets.only(
+  //                               top: 0, right: 0, left: 0, bottom: 130.0),
+  //                           child: Column(
+  //                             mainAxisSize: MainAxisSize.max,
+  //                             children: [
+  //                               Row(
+  //                                 children: [
+  //                                   Text(
+  //                                     "PIEZA: ${pieza.codPropietario.toString()}-${pieza.codPieza.toString()}-${pieza.codNIF.toString()}",
+  //                                     style: const TextStyle(
+  //                                       fontSize: 18.2,
+  //                                     ),
+  //                                   ),
+  //                                 ],
+  //                               ),
+  //                               Row(
+  //                                 children: [
+  //                                   Text(
+  //                                     pieza.identificador.toString(),
+  //                                     style: const TextStyle(
+  //                                       fontSize: 15,
+  //                                     ),
+  //                                   ),
+  //                                 ],
+  //                               ),
+  //                               Row(
+  //                                 children: [
+  //                                   Text(
+  //                                     "Contenedor: ${pieza.codPropietarioPadre.toString()}-${pieza.codPiezaPadre.toString()}",
+  //                                     textScaleFactor: 1.0,
+  //                                   ),
+  //                                 ],
+  //                               ),
+  //                               Row(
+  //                                 children: <Widget>[
+  //                                   TextButton(
+  //                                     onPressed: () => {
+  //                                       if (pieza.contenedor == "true")
+  //                                         {actualizarPiezas(pieza)}
+  //                                       else
+  //                                         {
+  //                                           showError(context!),
+  //                                         }
+  //                                     },
+  //                                     style: const ButtonStyle(
+  //                                       backgroundColor:
+  //                                       MaterialStatePropertyAll(
+  //                                           Colors.lightBlueAccent),
+  //                                       elevation:
+  //                                       MaterialStatePropertyAll(20.0),
+  //                                       foregroundColor:
+  //                                       MaterialStatePropertyAll(
+  //                                           Colors.white),
+  //                                     ),
+  //                                     child: const Text(
+  //                                       "Detail",
+  //                                       style: TextStyle(
+  //                                         decorationColor: Colors.black,
+  //                                       ),
+  //                                     ),
+  //                                   ),
+  //                                 ],
+  //                               ),
+  //                             ],
+  //                           ),
+  //                         )
+  //                       ])),
+  //                 ],
+  //               )),
+  //         )
+  //       ],
+  //     ));
+  //   }
+  //   return piezas;
+  // }
 
   void showDialogPDF(BuildContext context) {
     // Creamos los botones
