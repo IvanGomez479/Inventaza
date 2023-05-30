@@ -42,7 +42,7 @@ class _PDFState extends State<PDF> {
   }
 
   Future<PiezaView> getPieza() async {
-    final String codPieza = "${widget.pieza.codPropietarioPadre.toString()}${widget.pieza.codPieza.toString()}${widget.pieza.codNIF.toString()}";
+    final String codPieza = "${widget.pieza.codPropietario.toString()}${widget.pieza.codPieza.toString()}${widget.pieza.codNIF.toString()}";
 
     var url = Uri.parse(
         "http://www.ies-azarquiel.es/paco/apiinventario/pieza/$codPieza");
@@ -153,7 +153,7 @@ class _PDFState extends State<PDF> {
               pw.SizedBox(height: 20),
               pw.Row(children: [
                 pw.Text(
-                  piezaView.descPropietario.toString(),
+                  "${piezaView.descPropietario}",
                   style: const pw.TextStyle(
                       fontSize: 20.0,
                   ),

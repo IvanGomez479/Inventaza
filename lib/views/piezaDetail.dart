@@ -25,8 +25,9 @@ class _PiezaDetailState extends State<PiezaDetail> {
   late List<Pieza> listadoPiezas = [];
   List<Pieza> listadoPiezasBuscador = [];
   final TextEditingController searchController = TextEditingController();
-  late List<Widget> piezas = [];
   late List<Pieza> data = [];
+  late String? textBuscador = "";
+  late bool limpiarBuscador = true;
 
   @override
   void initState() {
@@ -35,6 +36,7 @@ class _PiezaDetailState extends State<PiezaDetail> {
       setState(() {
         listadoPiezas.addAll(value);
         listadoPiezasBuscador = listadoPiezas;
+        limpiarBuscador = false;
       });
     });
   }
@@ -43,41 +45,9 @@ class _PiezaDetailState extends State<PiezaDetail> {
     setState(() {
       widget.pieza = pieza;
       listadoPiezas = listaPiezasActualizada(widget.pieza);
+      textBuscador = "";
+      limpiarBuscador = true;
     });
-  }
-
-  Future<List<Pieza>> getPiezas() async {
-    final String codPieza =
-        "${widget.pieza.codPropietarioPadre.toString()}${widget.pieza.codPiezaPadre.toString()}";
-    var url = Uri.parse(
-        "http://www.ies-azarquiel.es/paco/apiinventario/padre/$codPieza/pieza");
-    final response = await http.get(url);
-
-    List<Pieza> piezas = [];
-
-    if (response.statusCode == 200) {
-      String body = utf8.decode(response.bodyBytes);
-
-      final jsonData = jsonDecode(body);
-
-      for (var item in jsonData["piezas"]) {
-        piezas.add(Pieza(
-          item["CodPropietarioPadre"],
-          item["CodPiezaPadre"],
-          item["CodPropietario"],
-          item["CodPieza"],
-          item["CodNIF"],
-          item["CodModelo"],
-          item["Identificador"],
-          item["Prestable"],
-          item["Contenedor"],
-          item["AltaPieza"],
-        ));
-      }
-      return piezas;
-    } else {
-      throw Exception("Falló la conexión");
-    }
   }
 
   Future<List<Pieza>> getPiezasHijas(Pieza pieza) async {
@@ -144,12 +114,16 @@ class _PiezaDetailState extends State<PiezaDetail> {
               padding: const EdgeInsets.all(8.0),
               child: TextField(
                 onChanged: (text) {
-                  text = text.toLowerCase();
+                  textBuscador = text;
+                  textBuscador = text.toLowerCase();
                   setState(() {
                     listadoPiezasBuscador = listadoPiezas.where((pieza) {
                       var noteTitle = pieza.codPieza.toString().toLowerCase();
-                      return noteTitle.startsWith(text);
+                      return noteTitle.startsWith(textBuscador.toString());
                     }).toList();
+                    if(limpiarBuscador){
+                      text = "";
+                    }
                   });
                 },
                 decoration: const InputDecoration(
@@ -192,7 +166,7 @@ class _PiezaDetailState extends State<PiezaDetail> {
                           Row(
                             children: [
                               Text(
-                                "Contenedor: ${widget.pieza.codPropietario.toString()}-${widget.pieza.codPropietarioPadre.toString()}",
+                                "Contenedor: ${widget.pieza.codPropietarioPadre.toString()}-${widget.pieza.codPiezaPadre.toString()}",
                                 textScaleFactor: 1.0,
                               ),
                             ],
@@ -208,9 +182,9 @@ class _PiezaDetailState extends State<PiezaDetail> {
                   builder: (BuildContext context, AsyncSnapshot snapshot) {
                     if (snapshot.hasData) {
                       return ListView(
-                        children: //text == ""
-                             listPiezas(snapshot.data)
-                            //: listPiezas(listadoPiezasBuscador),
+                        children: textBuscador == ""
+                             ? listPiezas(snapshot.data)
+                             : listPiezas(listadoPiezasBuscador),
                       );
                     } else if (snapshot.hasError) {
                       if (kDebugMode) {
@@ -334,113 +308,6 @@ class _PiezaDetailState extends State<PiezaDetail> {
 
     return data;
   }
-
-  // List<Widget> actualizarListPiezasByPieza(Pieza pieza) {
-  //
-  //   getPiezasHijas(pieza).then((value) {
-  //       data.addAll(value);
-  //   });
-  //   //final context = PiezaDetail.navKey.currentState?.context;
-  //   int longitudData = data.length;
-  //
-  //   piezas = listPiezas(data);
-  //
-  //   for (var pieza in data) {
-  //     piezas.add(Flex(
-  //       direction: Axis.horizontal,
-  //       children: [
-  //         Flexible(
-  //           child: Card(
-  //               margin: const EdgeInsets.all(6.0),
-  //               shadowColor: Colors.grey,
-  //               elevation: 10.0,
-  //               child: Row(
-  //                 children: <Widget>[
-  //                   Expanded(
-  //                     flex: 5,
-  //                     child: Image.network(
-  //                         "http://www.ies-azarquiel.es/paco/apiinventario/resources/photo/${pieza.codModelo.toString()}.jpg"),
-  //                   ),
-  //                   Expanded(
-  //                       flex: 5,
-  //                       child: Wrap(children: <Widget>[
-  //                         Container(
-  //                           padding: const EdgeInsets.all(15.0),
-  //                           margin: const EdgeInsets.only(
-  //                               top: 0, right: 0, left: 0, bottom: 130.0),
-  //                           child: Column(
-  //                             mainAxisSize: MainAxisSize.max,
-  //                             children: [
-  //                               Row(
-  //                                 children: [
-  //                                   Text(
-  //                                     "PIEZA: ${pieza.codPropietario.toString()}-${pieza.codPieza.toString()}-${pieza.codNIF.toString()}",
-  //                                     style: const TextStyle(
-  //                                       fontSize: 18.2,
-  //                                     ),
-  //                                   ),
-  //                                 ],
-  //                               ),
-  //                               Row(
-  //                                 children: [
-  //                                   Text(
-  //                                     pieza.identificador.toString(),
-  //                                     style: const TextStyle(
-  //                                       fontSize: 15,
-  //                                     ),
-  //                                   ),
-  //                                 ],
-  //                               ),
-  //                               Row(
-  //                                 children: [
-  //                                   Text(
-  //                                     "Contenedor: ${pieza.codPropietarioPadre.toString()}-${pieza.codPiezaPadre.toString()}",
-  //                                     textScaleFactor: 1.0,
-  //                                   ),
-  //                                 ],
-  //                               ),
-  //                               Row(
-  //                                 children: <Widget>[
-  //                                   TextButton(
-  //                                     onPressed: () => {
-  //                                       if (pieza.contenedor == "true")
-  //                                         {actualizarPiezas(pieza)}
-  //                                       else
-  //                                         {
-  //                                           showError(context!),
-  //                                         }
-  //                                     },
-  //                                     style: const ButtonStyle(
-  //                                       backgroundColor:
-  //                                       MaterialStatePropertyAll(
-  //                                           Colors.lightBlueAccent),
-  //                                       elevation:
-  //                                       MaterialStatePropertyAll(20.0),
-  //                                       foregroundColor:
-  //                                       MaterialStatePropertyAll(
-  //                                           Colors.white),
-  //                                     ),
-  //                                     child: const Text(
-  //                                       "Detail",
-  //                                       style: TextStyle(
-  //                                         decorationColor: Colors.black,
-  //                                       ),
-  //                                     ),
-  //                                   ),
-  //                                 ],
-  //                               ),
-  //                             ],
-  //                           ),
-  //                         )
-  //                       ])),
-  //                 ],
-  //               )),
-  //         )
-  //       ],
-  //     ));
-  //   }
-  //   return piezas;
-  // }
 
   void showDialogPDF(BuildContext context) {
     // Creamos los botones
