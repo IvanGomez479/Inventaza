@@ -93,9 +93,11 @@ class _MyAppState extends State<MyApp> {
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: TextField(
+                        // Cada vez que se escriba una letra en el buscador, se ejecutará este código
                         onChanged: (text) {
                           text = text.toLowerCase();
                           setState(() {
+                            // Guardamos en una variable el valor de la nueva lista dependiendo de lo que se haya escrito en el buscador
                             listadoPiezasBuscador = listadoPiezas.where((pieza) {
                               var noteTitle = pieza.codPieza.toString().toLowerCase();
                               return noteTitle.startsWith(text);
@@ -114,6 +116,7 @@ class _MyAppState extends State<MyApp> {
                     builder: (BuildContext context, AsyncSnapshot snapshot) {
                       if (snapshot.hasData) {
                         return ListView(
+                          // Dependiendo de si se ha escrito algo en el buscador, cargaremos una lista u otra
                           children: listadoPiezas == 0 ? listPiezas(snapshot.data) : listPiezas(listadoPiezasBuscador),
                         );
                       } else if (snapshot.hasError) {
@@ -134,7 +137,7 @@ class _MyAppState extends State<MyApp> {
   }
 
 
-
+  //método que generará la lista de Cards(Widgets) a partir de una lista de piezas
   List<Widget> listPiezas(List<Pieza> data) {
     List<Widget> piezas = [];
     final context = MyApp.navKey.currentState?.overlay?.context;
@@ -242,7 +245,7 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
-
+// Método que muestra una ventana (AlertDialog) avisando de que la pieza pulsada no tiene piezas hijas
 void showError(BuildContext context) {
   Widget okButton = TextButton(
     child: const Text("OK"),

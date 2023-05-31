@@ -87,120 +87,81 @@ class _PiezaDetailState extends State<PiezaDetail> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-            title: const Text("InventAza"),
-            flexibleSpace: Container(
-              decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.topRight,
-                      colors: <Color>[
-                    Colors.lightBlueAccent,
-                    Colors.cyanAccent
-                  ])),
-            )),
+      // Botón flotante del generador de PDFs
         floatingActionButton: FloatingActionButton(
           backgroundColor: Colors.redAccent,
           foregroundColor: Colors.white,
           onPressed: () => {showDialogPDF(context)},
           child: const Icon(Icons.picture_as_pdf_rounded),
         ),
-        body: Column(
-          mainAxisSize: MainAxisSize.max,
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: TextField(
-                onChanged: (text) {
-                  textBuscador = text;
-                  textBuscador = text.toLowerCase();
-                  setState(() {
-                    listadoPiezasBuscador = listadoPiezas.where((pieza) {
-                      var noteTitle = pieza.codPieza.toString().toLowerCase();
-                      return noteTitle.startsWith(textBuscador.toString());
-                    }).toList();
-                    if(limpiarBuscador){
-                      text = "";
-                    }
-                  });
-                },
-                decoration: const InputDecoration(
-                  labelText: 'Buscar',
-                  prefixIcon: Icon(Icons.search),
-                ),
+        body: CustomScrollView(slivers: [
+          SliverAppBar(
+            expandedHeight: 400,
+            pinned: true,
+            scrolledUnderElevation: 10.0,
+            backgroundColor: Colors.lightBlueAccent,
+            flexibleSpace: FlexibleSpaceBar(
+              title: Text(
+                  "PIEZA: ${widget.pieza.codPropietario.toString()}-${widget.pieza.codPieza.toString()}-${widget.pieza.codNIF.toString()}"),
+              centerTitle: true,
+              collapseMode: CollapseMode.parallax,
+              background: Image(
+                image: NetworkImage(
+                    "http://www.ies-azarquiel.es/paco/apiinventario/resources/photo/${widget.pieza.codModelo.toString()}.jpg"),
+                fit: BoxFit.cover,
               ),
             ),
-            Card(
-                elevation: 30.0,
-                child: Column(
-                  children: [
-                    Image.network(
-                      "http://www.ies-azarquiel.es/paco/apiinventario/resources/photo/${widget.pieza.codModelo.toString()}.jpg",
-                      height: 100,
-                    ),
-                    Container(
-                      padding: const EdgeInsets.all(15.0),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.max,
-                        children: [
-                          Row(
-                            children: [
-                              Text(
-                                "PIEZA: ${widget.pieza.codPropietario.toString()}-${widget.pieza.codPieza.toString()}-${widget.pieza.codNIF.toString()}",
-                                textScaleFactor: 1.4,
-                              ),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Text(
-                                widget.pieza.identificador.toString(),
-                                style: const TextStyle(
-                                  fontSize: 15,
-                                ),
-                              ),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Text(
-                                "Contenedor: ${widget.pieza.codPropietarioPadre.toString()}-${widget.pieza.codPiezaPadre.toString()}",
-                                textScaleFactor: 1.0,
-                              ),
-                            ],
-                          ),
-                        ],
+          ),
+          SliverFillRemaining(
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: TextField(
+                      // Cada vez que se escriba una letra en el buscador, se ejecutará este código
+                      onChanged: (text) {
+                        textBuscador = text;
+                        textBuscador = text.toLowerCase();
+                        setState(() {
+                          // Guardamos en una variable el valor de la nueva lista dependiendo de lo que se haya escrito en el buscador
+                          listadoPiezasBuscador = listadoPiezas.where((pieza) {
+                            var noteTitle = pieza.codPieza.toString().toLowerCase();
+                            return noteTitle.startsWith(textBuscador.toString());
+                          }).toList();
+                        });
+                      },
+                      decoration: const InputDecoration(
+                        labelText: 'Buscar',
+                        prefixIcon: Icon(Icons.search),
                       ),
-                    )
-                  ],
-                )),
-            Expanded(
-              child: FutureBuilder(
-                  future: getPiezasHijas(widget.pieza),
-                  builder: (BuildContext context, AsyncSnapshot snapshot) {
-                    if (snapshot.hasData) {
-                      return ListView(
-                        children: textBuscador == ""
-                             ? listPiezas(snapshot.data)
-                             : listPiezas(listadoPiezasBuscador),
-                      );
-                    } else if (snapshot.hasError) {
-                      if (kDebugMode) {
-                        print(snapshot.error);
-                      }
-                      return const Text("Error");
-                    }
-                    return const Center(
-                      child: CircularProgressIndicator(),
-                    );
-                  }),
-            ),
-          ],
-        ));
+                    ),
+                  ),
+                  Expanded(
+                      child: FutureBuilder(
+                          future: getPiezasHijas(widget.pieza),
+                          builder: (BuildContext context, AsyncSnapshot snapshot) {
+                            if (snapshot.hasData) {
+                              return ListView(
+                                children: textBuscador == ""
+                                    ? listPiezas(snapshot.data) //Lista de piezas de la Pieza pulsada
+                                    : listPiezas(listadoPiezasBuscador), // Lista que depende del buscador
+                              );
+                            } else if (snapshot.hasError) {
+                              if (kDebugMode) {
+                                print(snapshot.error);
+                              }
+                              return const Text("Error");
+                            }
+                            return const Center(
+                              child: CircularProgressIndicator(),
+                            );
+                          }))
+                ],
+              )),
+        ]));
   }
 
+  //Método que genera la lista de Widgets a partir de una lista de objetos Pieza
   List<Widget> listPiezas(List<Pieza> data) {
     List<Widget> piezas = [];
 
@@ -301,6 +262,7 @@ class _PiezaDetailState extends State<PiezaDetail> {
     return piezas;
   }
 
+  //Método que devuelve una lista de piezas a partir de un objeto Pieza
   List<Pieza> listaPiezasActualizada(Pieza pieza) {
     getPiezasHijas(pieza).then((value) {
       data.addAll(value);
@@ -309,6 +271,7 @@ class _PiezaDetailState extends State<PiezaDetail> {
     return data;
   }
 
+  // Método que muestra una ventana que pregunta si se desea continuar a la siguiente pantalla
   void showDialogPDF(BuildContext context) {
     // Creamos los botones
     Widget cancelButton = TextButton(
@@ -319,6 +282,7 @@ class _PiezaDetailState extends State<PiezaDetail> {
     );
     Widget continueButton = TextButton(
       child: const Text("Continuar"),
+      // Si se pulsa el botón, navegamos a la pantalla del PDF
       onPressed: () {
         Navigator.push(
           context,
@@ -347,6 +311,7 @@ class _PiezaDetailState extends State<PiezaDetail> {
   }
 }
 
+// Método que muestra una ventana (AlertDialog) avisando de que la pieza pulsada no tiene piezas hijas
 void showError(BuildContext context) {
   Widget okButton = TextButton(
     child: const Text("OK"),
@@ -371,25 +336,4 @@ void showError(BuildContext context) {
       return alert;
     },
   );
-}
-
-Future<void> generatePDF(Pieza pieza) async {
-  final pdf = pw.Document();
-
-  // Contenido del PDF
-  pdf.addPage(
-    pw.Page(
-      build: (pw.Context context) {
-        return pw.Center(
-          child: pw.Text(
-              "${pieza.codPropietario.toString()}${pieza.codPieza.toString()}",
-              style: const pw.TextStyle(fontSize: 40)),
-        );
-      },
-    ),
-  );
-
-  // Guardar el archivo PDF
-  final output = File('Downloads/archivo.pdf');
-  await output.writeAsBytes(await pdf.save());
 }

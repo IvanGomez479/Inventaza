@@ -41,6 +41,7 @@ class _PDFState extends State<PDF> {
     archivoPdf = await generarPDF();
   }
 
+  //Método que devuelve un objeto PiezaView para poder pintar sus datos en el PDF
   Future<PiezaView> getPieza() async {
     final String codPieza = "${widget.pieza.codPropietario.toString()}${widget.pieza.codPieza.toString()}${widget.pieza.codNIF.toString()}";
 
@@ -93,10 +94,12 @@ class _PDFState extends State<PDF> {
                   Colors.cyanAccent
                 ])),
           )),
+      //Botón flotante para compartir el PDF
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.lightBlueAccent,
         foregroundColor: Colors.white,
         onPressed: () async => {
+          // Compartimos el PDF a la aplicación que se desee
           await Printing.sharePdf(
               bytes: archivoPdf,
               filename: 'Pieza-${widget.pieza.codPieza.toString()}.pdf'),
@@ -127,6 +130,7 @@ class _PDFState extends State<PDF> {
     );
   }
 
+  // Método que genera el PDF
   Future<Uint8List> generarPDF() async {
     pdf = pw.Document();
 
@@ -195,6 +199,7 @@ class _PDFState extends State<PDF> {
     return pdf.save();
   }
 
+  // Cabecera del PDF (título)
   pw.Widget _buildHeader(pw.Context context) {
     return pw.Padding(
       padding: const pw.EdgeInsets.symmetric(
@@ -225,6 +230,7 @@ class _PDFState extends State<PDF> {
     );
   }
 
+  // Pie de página del PDF (número de página)
   pw.Widget _buildFooter(pw.Context context) {
     return pw.Padding(
       padding: const pw.EdgeInsets.symmetric(
