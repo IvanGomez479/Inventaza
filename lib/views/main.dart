@@ -117,7 +117,7 @@ class _MyAppState extends State<MyApp> {
                       if (snapshot.hasData) {
                         return ListView(
                           // Dependiendo de si se ha escrito algo en el buscador, cargaremos una lista u otra
-                          children: listadoPiezas == 0 ? listPiezas(snapshot.data) : listPiezas(listadoPiezasBuscador),
+                          children: listPiezas(listadoPiezasBuscador),
                         );
                       } else if (snapshot.hasError) {
                         if (kDebugMode) {

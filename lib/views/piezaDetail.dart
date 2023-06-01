@@ -27,7 +27,6 @@ class _PiezaDetailState extends State<PiezaDetail> {
   final TextEditingController searchController = TextEditingController();
   late List<Pieza> data = [];
   late String? textBuscador = "";
-  late bool limpiarBuscador = true;
 
   @override
   void initState() {
@@ -36,7 +35,6 @@ class _PiezaDetailState extends State<PiezaDetail> {
       setState(() {
         listadoPiezas.addAll(value);
         listadoPiezasBuscador = listadoPiezas;
-        limpiarBuscador = false;
       });
     });
   }
@@ -46,7 +44,6 @@ class _PiezaDetailState extends State<PiezaDetail> {
       widget.pieza = pieza;
       listadoPiezas = listaPiezasActualizada(widget.pieza);
       textBuscador = "";
-      limpiarBuscador = true;
     });
   }
 
