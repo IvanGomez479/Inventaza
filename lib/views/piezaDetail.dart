@@ -224,7 +224,7 @@ class _PiezaDetailState extends State<PiezaDetail> {
                                           {actualizarPiezas(pieza)}
                                         else
                                           {
-                                            showError(context),
+                                            showError(context, pieza),
                                           }
                                       },
                                       style: const ButtonStyle(
@@ -271,14 +271,8 @@ class _PiezaDetailState extends State<PiezaDetail> {
   // Método que muestra una ventana que pregunta si se desea continuar a la siguiente pantalla
   void showDialogPDF(BuildContext context) {
     // Creamos los botones
-    Widget cancelButton = TextButton(
-      child: const Text("Cancelar"),
-      onPressed: () {
-        Navigator.pop(context);
-      },
-    );
-    Widget continueButton = TextButton(
-      child: const Text("Continuar"),
+    Widget yesButton = TextButton(
+      child: const Text("Sí"),
       // Si se pulsa el botón, navegamos a la pantalla del PDF
       onPressed: () {
         Navigator.push(
@@ -287,14 +281,20 @@ class _PiezaDetailState extends State<PiezaDetail> {
         );
       },
     );
+    Widget noButton = TextButton(
+      child: const Text("No"),
+      onPressed: () {
+        Navigator.pop(context);
+      },
+    );
 
     // set up the AlertDialog
     AlertDialog alert = AlertDialog(
       title: const Text("PDF Generator"),
       content: const Text("¿Quieres generar un PDF de esta Pieza?"),
       actions: [
-        cancelButton,
-        continueButton,
+        yesButton,
+        noButton
       ],
     );
 
@@ -309,9 +309,19 @@ class _PiezaDetailState extends State<PiezaDetail> {
 }
 
 // Método que muestra una ventana (AlertDialog) avisando de que la pieza pulsada no tiene piezas hijas
-void showError(BuildContext context) {
-  Widget okButton = TextButton(
-    child: const Text("OK"),
+void showError(BuildContext context, Pieza pieza) {
+  Widget yesButton = TextButton(
+    child: const Text("Sí"),
+    // Si se pulsa el botón, navegamos a la pantalla del PDF
+    onPressed: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => PDF(pieza: pieza)),
+      );
+    },
+  );
+  Widget noButton = TextButton(
+    child: const Text("No"),
     onPressed: () {
       Navigator.pop(context);
     },
@@ -320,9 +330,10 @@ void showError(BuildContext context) {
   // set up the AlertDialog
   AlertDialog alert = AlertDialog(
     title: const Text("Error"),
-    content: const Text("Esta pieza no contiene a otras"),
+    content: const Text("Esta pieza no contiene a otras, ¿Te gustaría generar su PDF?"),
     actions: [
-      okButton,
+      yesButton,
+      noButton
     ],
   );
 
