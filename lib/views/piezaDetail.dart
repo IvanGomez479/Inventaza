@@ -27,6 +27,7 @@ class _PiezaDetailState extends State<PiezaDetail> {
   final TextEditingController searchController = TextEditingController();
   late List<Pieza> data = [];
   late String? textBuscador = "";
+  ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -139,6 +140,7 @@ class _PiezaDetailState extends State<PiezaDetail> {
                           builder: (BuildContext context, AsyncSnapshot snapshot) {
                             if (snapshot.hasData) {
                               return ListView(
+                                controller: _scrollController,
                                 children: textBuscador == ""
                                     ? listPiezas(snapshot.data) //Lista de piezas de la Pieza pulsada
                                     : listPiezas(listadoPiezasBuscador), // Lista que depende del buscador
@@ -220,8 +222,10 @@ class _PiezaDetailState extends State<PiezaDetail> {
                                   children: <Widget>[
                                     TextButton(
                                       onPressed: () => {
-                                        if (pieza.contenedor == "true")
-                                          {actualizarPiezas(pieza)}
+                                        if (pieza.contenedor == "true") {
+                                          actualizarPiezas(pieza),
+                                          _scrollTo(0)
+                                        }
                                         else
                                           {
                                             showError(context, pieza),
@@ -266,6 +270,14 @@ class _PiezaDetailState extends State<PiezaDetail> {
     });
 
     return data;
+  }
+
+  void _scrollTo(int index) {
+    _scrollController.animateTo(
+      index * 56.0, // Cada elemento tiene una altura estimada de 56.0 píxeles
+      duration: Duration(milliseconds: 500),
+      curve: Curves.ease,
+    );
   }
 
   // Método que muestra una ventana que pregunta si se desea continuar a la siguiente pantalla

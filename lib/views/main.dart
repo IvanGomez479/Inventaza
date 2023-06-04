@@ -14,7 +14,6 @@ class MyApp extends StatefulWidget {
   static final navKey = GlobalKey<NavigatorState>();
   const MyApp({super.key, navKey});
 
-
   @override
   _MyAppState createState() => _MyAppState();
 }
@@ -50,7 +49,6 @@ class _MyAppState extends State<MyApp> {
         ));
       }
       return piezas;
-
     } else {
       throw Exception("Falló la conexión");
     }
@@ -69,73 +67,71 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      navigatorKey: MyApp.navKey,
-      title: "Material App",
-      theme: ThemeData(
-          scaffoldBackgroundColor: const Color(0xffc7e8fc)
-      ),
-      home: Scaffold(
-          appBar: AppBar(
-              title: const Text("InventAza"),
-              flexibleSpace: Container(
-                decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.topRight,
-                        colors: <Color>[Colors.lightBlueAccent, Colors.cyanAccent])),
-              )
-          ),
-          body: Column(
-            mainAxisSize: MainAxisSize.max,
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: TextField(
-                        // Cada vez que se escriba una letra en el buscador, se ejecutará este código
-                        onChanged: (text) {
-                          text = text.toLowerCase();
-                          setState(() {
-                            // Guardamos en una variable el valor de la nueva lista dependiendo de lo que se haya escrito en el buscador
-                            listadoPiezasBuscador = listadoPiezas.where((pieza) {
-                              var noteTitle = pieza.codPieza.toString().toLowerCase();
-                              return noteTitle.startsWith(text);
-                            }).toList();
-                          });
-                        },
-                        decoration: const InputDecoration(
-                          labelText: 'Buscar',
-                          prefixIcon: Icon(Icons.search),
-                        ),
-                      ),
+        navigatorKey: MyApp.navKey,
+        title: "Material App",
+        theme: ThemeData(scaffoldBackgroundColor: const Color(0xffc7e8fc)),
+        home: Scaffold(
+            appBar: AppBar(
+                title: const Text("InventAza"),
+                flexibleSpace: Container(
+                  decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.topRight,
+                          colors: <Color>[
+                        Colors.lightBlueAccent,
+                        Colors.cyanAccent
+                      ])),
+                )),
+            body: Column(
+              mainAxisSize: MainAxisSize.max,
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: TextField(
+                    // Cada vez que se escriba una letra en el buscador, se ejecutará este código
+                    onChanged: (text) {
+                      text = text.toLowerCase();
+                      setState(() {
+                        // Guardamos en una variable el valor de la nueva lista dependiendo de lo que se haya escrito en el buscador
+                        listadoPiezasBuscador = listadoPiezas.where((pieza) {
+                          var noteTitle =
+                              pieza.codPieza.toString().toLowerCase();
+                          return noteTitle.startsWith(text);
+                        }).toList();
+                      });
+                    },
+                    decoration: const InputDecoration(
+                      labelText: 'Buscar',
+                      prefixIcon: Icon(Icons.search),
+                    ),
+                  ),
                 ),
-              Expanded(
-                child: FutureBuilder(
-                    future: getPiezas(),
-                    builder: (BuildContext context, AsyncSnapshot snapshot) {
-                      if (snapshot.hasData) {
-                        return ListView(
-                          // Dependiendo de si se ha escrito algo en el buscador, cargaremos una lista u otra
-                          children: listPiezas(listadoPiezasBuscador),
-                        );
-                      } else if (snapshot.hasError) {
-                        if (kDebugMode) {
-                          print(snapshot.error);
+                Expanded(
+                  child: FutureBuilder(
+                      future: getPiezas(),
+                      builder: (BuildContext context, AsyncSnapshot snapshot) {
+                        if (snapshot.hasData) {
+                          return ListView(
+                            // Dependiendo de si se ha escrito algo en el buscador, cargaremos una lista u otra
+                            children: listPiezas(listadoPiezasBuscador),
+                          );
+                        } else if (snapshot.hasError) {
+                          if (kDebugMode) {
+                            print(snapshot.error);
+                          }
+                          return const Text("Error");
                         }
-                        return const Text("Error");
-                      }
-                      return const Center(
-                        child: CircularProgressIndicator(),
-                      );
-                    }),
-              ),
-            ],
-          )
-      )
-    );
+                        return const Center(
+                          child: CircularProgressIndicator(),
+                        );
+                      }),
+                ),
+              ],
+            )));
   }
-
 
   //método que generará la lista de Cards(Widgets) a partir de una lista de piezas
   List<Widget> listPiezas(List<Pieza> data) {
@@ -148,95 +144,106 @@ class _MyAppState extends State<MyApp> {
         children: [
           Flexible(
             child: Card(
-                margin: const EdgeInsets.all(6.0),
+                margin: const EdgeInsets.all(10.0),
                 shadowColor: Colors.grey,
                 elevation: 10.0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                  //set border radius more than 50% of height and width to make circle
-                ),
                 child: Row(
                   children: <Widget>[
                     Expanded(
                       flex: 5,
                       child: Image.network(
                         "http://www.ies-azarquiel.es/paco/apiinventario/resources/photo/${pieza.codModelo.toString()}.jpg",
+                        fit: BoxFit.cover,
                       ),
                     ),
                     Expanded(
                         flex: 5,
-                        child: Wrap(
-                            children: <Widget>[
-                              Container(
-                                padding: const EdgeInsets.all(15.0),
-                                margin: const EdgeInsets.only(top: 0, right: 0, left: 0, bottom: 130.0),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.max,
+                        child: Container(
+                            padding: const EdgeInsets.all(15.0),
+                            margin: const EdgeInsets.only(
+                               top: 0, right: 0, left: 0, bottom: 120.0),
+                            alignment: AlignmentDirectional.topEnd,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.max,
+                              children: [
+                                Row(
                                   children: [
-                                    Row(
-                                      children: [
-                                        Text(
-                                          "PIEZA: ${pieza.codPropietario.toString()}-${pieza.codPieza.toString()}-${pieza.codNIF.toString()}",
-                                          style: const TextStyle(
-                                            fontSize: 18.2,
-                                          ),
+                                    Flexible(
+                                      child: Text(
+                                        "PIEZA: ${pieza.codPropietario.toString()}-${pieza.codPieza.toString()}-${pieza.codNIF.toString()}",
+                                        style: const TextStyle(
+                                          fontSize: 18.0,
                                         ),
-                                      ],
-                                    ),
-                                    Row(
-                                      children: [
-                                        Text(
+                                      ),
+                                    )
+                                  ],
+                                ),
+                                Row(
+                                  children: [
+                                    Flexible(
+                                        child: Text(
                                           pieza.identificador.toString(),
                                           style: const TextStyle(
                                             fontSize: 15,
                                           ),
                                         ),
-                                      ],
-                                    ),
-                                    Row(
-                                      children: [
-                                        Text(
+                                    )
+                                  ],
+                                ),
+                                Row(
+                                  children: [
+                                    Flexible(
+                                        child: Text(
                                           "Contenedor: ${pieza.codPropietarioPadre.toString()}-${pieza.codPiezaPadre.toString()}",
                                           textScaleFactor: 1.0,
                                         ),
-                                      ],
-                                    ),
-                                    Row(
-                                      children: <Widget>[
-                                        TextButton(
-                                          onPressed: () => {
-                                            if(pieza.contenedor == "true") {
-                                              Navigator.push(
-                                                context!,
-                                                MaterialPageRoute(builder: (context) => PiezaDetail(pieza: pieza)),
-                                              )
-                                            } else {
-                                              showError(context!),
-                                            }
-                                          },
-                                          style: const ButtonStyle(
-                                            backgroundColor: MaterialStatePropertyAll(Colors.lightBlueAccent),
-                                            elevation: MaterialStatePropertyAll(20.0),
-                                            foregroundColor: MaterialStatePropertyAll(Colors.white),
-                                          ),
-                                          child: const Text(
-                                            "Detail",
-                                            style: TextStyle(
-                                              decorationColor: Colors.black,
-                                            ),
-                                          ),
+                                    )
+
+                                  ],
+                                ),
+                                Row(
+                                  children: <Widget>[
+                                    TextButton(
+                                      onPressed: () => {
+                                        if (pieza.contenedor == "true")
+                                          {
+                                            Navigator.push(
+                                              context!,
+                                              MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      PiezaDetail(
+                                                          pieza: pieza)),
+                                            )
+                                          }
+                                        else
+                                          {
+                                            showError(context!),
+                                          }
+                                      },
+                                      style: const ButtonStyle(
+                                        backgroundColor:
+                                            MaterialStatePropertyAll(
+                                                Colors.lightBlueAccent),
+                                        elevation:
+                                            MaterialStatePropertyAll(20.0),
+                                        foregroundColor:
+                                            MaterialStatePropertyAll(
+                                                Colors.white),
+                                      ),
+                                      child: const Text(
+                                        "Detail",
+                                        style: TextStyle(
+                                          decorationColor: Colors.black,
                                         ),
-                                      ],
+                                      ),
                                     ),
                                   ],
                                 ),
-                              )
-                            ]
-                        )
-                    ),
+                              ],
+                            ),
+                          )),
                   ],
-                )
-            ),
+                )),
           )
         ],
       ));
