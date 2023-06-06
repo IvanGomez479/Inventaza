@@ -181,10 +181,7 @@ class _MyAppState extends State<MyApp> {
                   children: <Widget>[
                     Expanded(
                       flex: 5,
-                      child: Image.network(
-                        "http://www.ies-azarquiel.es/paco/apiinventario/resources/photo/${pieza.codModelo.toString()}.jpg",
-                        fit: BoxFit.cover,
-                      ),
+                      child: Image.network(("http://www.ies-azarquiel.es/paco/apiinventario/resources/photo/${pieza.codModelo.toString()}.jpg"))
                     ),
                     Expanded(
                         flex: 5,
