@@ -28,6 +28,7 @@ class _PiezaDetailState extends State<PiezaDetail> {
   late List<Pieza> data = [];
   late String? textBuscador = "";
   ScrollController _scrollController = ScrollController();
+  bool mostrarClearButton = false;
 
   @override
   void initState() {
@@ -38,13 +39,14 @@ class _PiezaDetailState extends State<PiezaDetail> {
         listadoPiezasBuscador = listadoPiezas;
       });
     });
+    searchController.addListener(_checkInput);
   }
 
   void actualizarPiezas(Pieza pieza) {
     setState(() {
       widget.pieza = pieza;
       listadoPiezas = listaPiezasActualizada(widget.pieza);
-      textBuscador = "";
+      searchController.text = "";
     });
   }
 
@@ -83,6 +85,36 @@ class _PiezaDetailState extends State<PiezaDetail> {
   }
 
   @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
+  }
+
+  void _checkInput() {
+    setState(() {
+      mostrarClearButton = searchController.text.isNotEmpty;
+    });
+  }
+
+  void _clearSearch() {
+    setState(() {
+      searchController.clear();
+      mostrarClearButton = false;
+    });
+  }
+
+  updateListPiezas(String text) {
+    text = text.toLowerCase();
+    setState(() {
+      // Guardamos en una variable el valor de la nueva lista dependiendo de lo que se haya escrito en el buscador
+      listadoPiezasBuscador = listadoPiezas.where((pieza) {
+        var codPiezaSearch = pieza.codPieza.toString().toLowerCase();
+        return codPiezaSearch.startsWith(text);
+      }).toList();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       // Botón flotante del generador de PDFs
@@ -116,24 +148,21 @@ class _PiezaDetailState extends State<PiezaDetail> {
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: TextField(
+                      controller: searchController,
                       // Cada vez que se escriba una letra en el buscador, se ejecutará este código
-                      onChanged: (text) {
-                        textBuscador = text;
-                        textBuscador = text.toLowerCase();
-                        setState(() {
-                          // Guardamos en una variable el valor de la nueva lista dependiendo de lo que se haya escrito en el buscador
-                          listadoPiezasBuscador = listadoPiezas.where((pieza) {
-                            var noteTitle = pieza.codPieza.toString().toLowerCase();
-                            return noteTitle.startsWith(textBuscador.toString());
-                          }).toList();
-                        });
-                      },
-                      decoration: const InputDecoration(
+                      onChanged: updateListPiezas(searchController.text),
+                      decoration: InputDecoration(
                         labelText: 'Buscar',
-                        prefixIcon: Icon(Icons.search),
+                        prefixIcon:const Icon(Icons.search),
+                        suffixIcon: mostrarClearButton
+                                    ? IconButton(
+                                    icon: Icon(Icons.clear),
+                                    onPressed: _clearSearch,
+                                    )
+                                    : null,
+                        ),
                       ),
                     ),
-                  ),
                   Expanded(
                       child: FutureBuilder(
                           future: getPiezasHijas(widget.pieza),
@@ -141,7 +170,7 @@ class _PiezaDetailState extends State<PiezaDetail> {
                             if (snapshot.hasData) {
                               return ListView(
                                 controller: _scrollController,
-                                children: textBuscador == ""
+                                children: searchController.text == ""
                                     ? listPiezas(snapshot.data) //Lista de piezas de la Pieza pulsada
                                     : listPiezas(listadoPiezasBuscador), // Lista que depende del buscador
                               );
@@ -192,30 +221,36 @@ class _PiezaDetailState extends State<PiezaDetail> {
                               children: [
                                 Row(
                                   children: [
-                                    Text(
-                                      "PIEZA: ${pieza.codPropietario.toString()}-${pieza.codPieza.toString()}-${pieza.codNIF.toString()}",
-                                      style: const TextStyle(
-                                        fontSize: 18.2,
-                                      ),
-                                    ),
+                                    Flexible(
+                                        child: Text(
+                                          "PIEZA: ${pieza.codPropietario.toString()}-${pieza.codPieza.toString()}-${pieza.codNIF.toString()}",
+                                          style: const TextStyle(
+                                            fontSize: 18.2,
+                                          ),
+                                        ),
+                                    )
                                   ],
                                 ),
                                 Row(
                                   children: [
-                                    Text(
-                                      pieza.identificador.toString(),
-                                      style: const TextStyle(
-                                        fontSize: 15,
-                                      ),
-                                    ),
+                                    Flexible(
+                                        child: Text(
+                                          pieza.identificador.toString(),
+                                          style: const TextStyle(
+                                            fontSize: 15,
+                                          ),
+                                        ),
+                                    )
                                   ],
                                 ),
                                 Row(
                                   children: [
-                                    Text(
-                                      "Contenedor: ${pieza.codPropietarioPadre.toString()}-${pieza.codPiezaPadre.toString()}",
-                                      textScaleFactor: 1.0,
-                                    ),
+                                    Flexible(
+                                        child: Text(
+                                          "Contenedor: ${pieza.codPropietarioPadre.toString()}-${pieza.codPiezaPadre.toString()}",
+                                          textScaleFactor: 1.0,
+                                        ),
+                                    )
                                   ],
                                 ),
                                 Row(

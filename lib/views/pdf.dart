@@ -25,7 +25,7 @@ class _PDFState extends State<PDF> {
   late pw.Document pdf;
   late PdfImage imagen;
   late Uint8List archivoPdf;
-  late PiezaView piezaView;
+  late PiezaView? piezaView;
 
   @override
   void initState() {
@@ -157,7 +157,7 @@ class _PDFState extends State<PDF> {
               pw.SizedBox(height: 20),
               pw.Row(children: [
                 pw.Text(
-                  piezaView.descPropietario.toString(),
+                  piezaView!.descPropietario.toString(),
                   style: const pw.TextStyle(
                       fontSize: 20.0,
                   ),
@@ -166,28 +166,28 @@ class _PDFState extends State<PDF> {
               pw.SizedBox(height: 10),
               pw.Row(children: [
                 pw.Text(
-                  "Modelo: ${piezaView.descModelo.toString()}",
+                  "Modelo: ${piezaView?.descModelo.toString()}",
                   style: const pw.TextStyle(fontSize: 15.0),
                 ),
               ]),
               pw.SizedBox(height: 10),
               pw.Row(children: [
                 pw.Text(
-                  "Contenedor: ${piezaView.identificador.toString()}",
+                  "Contenedor: ${piezaView?.identificador.toString()}",
                   style: const pw.TextStyle(fontSize: 15.0),
                 ),
               ]),
               pw.SizedBox(height: 10),
               pw.Row(children: [
                 pw.Text(
-                  "Tipo: ${piezaView.descTipo.toString()} - ${piezaView.descSubTipo.toString()}",
+                  "Tipo: ${piezaView?.descTipo.toString()} - ${piezaView?.descSubTipo.toString()}",
                   style: const pw.TextStyle(fontSize: 15.0),
                 ),
               ]),
               pw.SizedBox(height: 10),
               pw.Row(children: [
                 pw.Text(
-                  "Fabricante: ${piezaView.nombreFabricante.toString()}",
+                  "Fabricante: ${piezaView?.nombreFabricante.toString()}",
                   style: const pw.TextStyle(fontSize: 15.0),
                 ),
               ]),

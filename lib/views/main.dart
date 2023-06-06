@@ -22,6 +22,7 @@ class _MyAppState extends State<MyApp> {
   late List<Pieza> listadoPiezas = [];
   List<Pieza> listadoPiezasBuscador = [];
   final TextEditingController searchController = TextEditingController();
+  bool _showClearButton = false;
 
   Future<List<Pieza>> getPiezas() async {
     var url = Uri.parse("http://www.ies-azarquiel.es/paco/apiinventario/pieza");
@@ -62,6 +63,37 @@ class _MyAppState extends State<MyApp> {
         listadoPiezasBuscador = listadoPiezas;
       });
     });
+    searchController.addListener(_checkInput);
+  }
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
+  }
+
+  void _checkInput() {
+    setState(() {
+      _showClearButton = searchController.text.isNotEmpty;
+    });
+  }
+
+  void _clearSearch() {
+    setState(() {
+      searchController.clear();
+      _showClearButton = false;
+    });
+  }
+
+  updateListPiezas(String text) {
+    text = text.toLowerCase();
+    setState(() {
+      // Guardamos en una variable el valor de la nueva lista dependiendo de lo que se haya escrito en el buscador
+      listadoPiezasBuscador = listadoPiezas.where((pieza) {
+        var codPiezaSearch = pieza.codPieza.toString().toLowerCase();
+        return codPiezaSearch.startsWith(text);
+      }).toList();
+    });
   }
 
   @override
@@ -91,24 +123,21 @@ class _MyAppState extends State<MyApp> {
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: TextField(
+                    controller: searchController,
                     // Cada vez que se escriba una letra en el buscador, se ejecutará este código
-                    onChanged: (text) {
-                      text = text.toLowerCase();
-                      setState(() {
-                        // Guardamos en una variable el valor de la nueva lista dependiendo de lo que se haya escrito en el buscador
-                        listadoPiezasBuscador = listadoPiezas.where((pieza) {
-                          var noteTitle =
-                              pieza.codPieza.toString().toLowerCase();
-                          return noteTitle.startsWith(text);
-                        }).toList();
-                      });
-                    },
-                    decoration: const InputDecoration(
+                    onChanged: updateListPiezas(searchController.text),
+                    decoration: InputDecoration(
                       labelText: 'Buscar',
-                      prefixIcon: Icon(Icons.search),
+                      prefixIcon: const Icon(Icons.search),
+                      suffixIcon: _showClearButton
+                                ? IconButton(
+                                    icon: Icon(Icons.clear),
+                                    onPressed: _clearSearch,
+                                )
+                                : null,
+                      ),
                     ),
                   ),
-                ),
                 Expanded(
                   child: FutureBuilder(
                       future: getPiezas(),
@@ -198,7 +227,6 @@ class _MyAppState extends State<MyApp> {
                                           textScaleFactor: 1.0,
                                         ),
                                     )
-
                                   ],
                                 ),
                                 Row(
