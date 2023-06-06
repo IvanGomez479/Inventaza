@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:pfc_inventaza/views/pdf.dart';
 import 'package:pfc_inventaza/views/piezaDetail.dart';
 
 import '../models/Pieza.dart';
@@ -22,7 +23,7 @@ class _MyAppState extends State<MyApp> {
   late List<Pieza> listadoPiezas = [];
   List<Pieza> listadoPiezasBuscador = [];
   final TextEditingController searchController = TextEditingController();
-  bool _showClearButton = false;
+  bool mostrarClearButton = false;
 
   Future<List<Pieza>> getPiezas() async {
     var url = Uri.parse("http://www.ies-azarquiel.es/paco/apiinventario/pieza");
@@ -63,7 +64,7 @@ class _MyAppState extends State<MyApp> {
         listadoPiezasBuscador = listadoPiezas;
       });
     });
-    searchController.addListener(_checkInput);
+    searchController.addListener(checkInput);
   }
 
   @override
@@ -72,20 +73,20 @@ class _MyAppState extends State<MyApp> {
     super.dispose();
   }
 
-  void _checkInput() {
+  void checkInput() {
     setState(() {
-      _showClearButton = searchController.text.isNotEmpty;
+      mostrarClearButton = searchController.text.isNotEmpty;
     });
   }
 
-  void _clearSearch() {
+  void limpiarBuscador() {
     setState(() {
       searchController.clear();
-      _showClearButton = false;
+      mostrarClearButton = false;
     });
   }
 
-  updateListPiezas(String text) {
+  updateListPiezasBuscador(String text) {
     text = text.toLowerCase();
     setState(() {
       // Guardamos en una variable el valor de la nueva lista dependiendo de lo que se haya escrito en el buscador
@@ -125,19 +126,19 @@ class _MyAppState extends State<MyApp> {
                   child: TextField(
                     controller: searchController,
                     // Cada vez que se escriba una letra en el buscador, se ejecutará este código
-                    onChanged: updateListPiezas(searchController.text),
+                    onChanged: updateListPiezasBuscador(searchController.text),
                     decoration: InputDecoration(
                       labelText: 'Buscar',
                       prefixIcon: const Icon(Icons.search),
-                      suffixIcon: _showClearButton
-                                ? IconButton(
-                                    icon: Icon(Icons.clear),
-                                    onPressed: _clearSearch,
-                                )
-                                : null,
-                      ),
+                      suffixIcon: mostrarClearButton
+                          ? IconButton(
+                              icon: Icon(Icons.clear),
+                              onPressed: limpiarBuscador,
+                            )
+                          : null,
                     ),
                   ),
+                ),
                 Expanded(
                   child: FutureBuilder(
                       future: getPiezas(),
@@ -188,88 +189,89 @@ class _MyAppState extends State<MyApp> {
                     Expanded(
                         flex: 5,
                         child: Container(
-                            padding: const EdgeInsets.all(15.0),
-                            margin: const EdgeInsets.only(
-                               top: 0, right: 0, left: 0, bottom: 120.0),
-                            alignment: AlignmentDirectional.topEnd,
-                            child: Column(
-                              mainAxisSize: MainAxisSize.max,
-                              children: [
-                                Row(
-                                  children: [
-                                    Flexible(
-                                      child: Text(
-                                        "PIEZA: ${pieza.codPropietario.toString()}-${pieza.codPieza.toString()}-${pieza.codNIF.toString()}",
-                                        style: const TextStyle(
-                                          fontSize: 18.0,
-                                        ),
-                                      ),
-                                    )
-                                  ],
-                                ),
-                                Row(
-                                  children: [
-                                    Flexible(
-                                        child: Text(
-                                          pieza.identificador.toString(),
-                                          style: const TextStyle(
-                                            fontSize: 15,
-                                          ),
-                                        ),
-                                    )
-                                  ],
-                                ),
-                                Row(
-                                  children: [
-                                    Flexible(
-                                        child: Text(
-                                          "Contenedor: ${pieza.codPropietarioPadre.toString()}-${pieza.codPiezaPadre.toString()}",
-                                          textScaleFactor: 1.0,
-                                        ),
-                                    )
-                                  ],
-                                ),
-                                Row(
-                                  children: <Widget>[
-                                    TextButton(
-                                      onPressed: () => {
-                                        if (pieza.contenedor == "true")
-                                          {
-                                            Navigator.push(
-                                              context!,
-                                              MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      PiezaDetail(
-                                                          pieza: pieza)),
-                                            )
-                                          }
-                                        else
-                                          {
-                                            showError(context!),
-                                          }
-                                      },
-                                      style: const ButtonStyle(
-                                        backgroundColor:
-                                            MaterialStatePropertyAll(
-                                                Colors.lightBlueAccent),
-                                        elevation:
-                                            MaterialStatePropertyAll(20.0),
-                                        foregroundColor:
-                                            MaterialStatePropertyAll(
-                                                Colors.white),
-                                      ),
-                                      child: const Text(
-                                        "Detail",
-                                        style: TextStyle(
-                                          decorationColor: Colors.black,
-                                        ),
+                          padding: const EdgeInsets.all(15.0),
+                          margin: const EdgeInsets.only(
+                              top: 0, right: 0, left: 0, bottom: 120.0),
+                          alignment: AlignmentDirectional.topEnd,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.max,
+                            children: [
+                              Row(
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      "PIEZA: ${pieza.codPropietario.toString()}-${pieza.codPieza.toString()}-${pieza.codNIF.toString()}",
+                                      style: const TextStyle(
+                                        fontSize: 18.0,
                                       ),
                                     ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          )),
+                                  )
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  Flexible(
+                                    child: pieza.identificador.toString() != "null" && pieza.identificador.toString() != ""
+                                        ? Text(pieza.identificador.toString(),
+                                            style: const TextStyle(
+                                              fontSize: 15,
+                                            ))
+                                        : const Text(
+                                            "Información no disponible",
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                  )
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      "Contenedor: ${pieza.codPropietarioPadre.toString()}-${pieza.codPiezaPadre.toString()}",
+                                      textScaleFactor: 1.0,
+                                    ),
+                                  )
+                                ],
+                              ),
+                              Row(
+                                children: <Widget>[
+                                  TextButton(
+                                    onPressed: () => {
+                                      if (pieza.contenedor == "true")
+                                        {
+                                          Navigator.push(
+                                            context!,
+                                            MaterialPageRoute(
+                                                builder: (context) =>
+                                                    PiezaDetail(pieza: pieza)),
+                                          )
+                                        }
+                                      else
+                                        {
+                                          showError(context!, pieza),
+                                        }
+                                    },
+                                    style: const ButtonStyle(
+                                      backgroundColor: MaterialStatePropertyAll(
+                                          Colors.lightBlueAccent),
+                                      elevation: MaterialStatePropertyAll(20.0),
+                                      foregroundColor: MaterialStatePropertyAll(
+                                          Colors.white),
+                                    ),
+                                    child: const Text(
+                                      "Detail",
+                                      style: TextStyle(
+                                        decorationColor: Colors.black,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        )),
                   ],
                 )),
           )
@@ -281,9 +283,19 @@ class _MyAppState extends State<MyApp> {
 }
 
 // Método que muestra una ventana (AlertDialog) avisando de que la pieza pulsada no tiene piezas hijas
-void showError(BuildContext context) {
-  Widget okButton = TextButton(
-    child: const Text("OK"),
+void showError(BuildContext context, Pieza pieza) {
+  Widget yesButton = TextButton(
+    child: const Text("Sí"),
+    // Si se pulsa el botón, navegamos a la pantalla del PDF
+    onPressed: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => PDF(pieza: pieza)),
+      );
+    },
+  );
+  Widget noButton = TextButton(
+    child: const Text("No"),
     onPressed: () {
       Navigator.pop(context);
     },
@@ -292,9 +304,10 @@ void showError(BuildContext context) {
   // set up the AlertDialog
   AlertDialog alert = AlertDialog(
     title: const Text("Error"),
-    content: const Text("Esta pieza no contiene a otras"),
+    content: const Text("Esta pieza no contiene a ninguna otra, ¿Te gustaría generar su PDF?"),
     actions: [
-      okButton,
+      yesButton,
+      noButton
     ],
   );
 

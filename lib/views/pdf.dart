@@ -172,10 +172,16 @@ class _PDFState extends State<PDF> {
               ]),
               pw.SizedBox(height: 10),
               pw.Row(children: [
-                pw.Text(
+                piezaView?.identificador.toString() != ""
+                ? pw.Text(
                   "Contenedor: ${piezaView?.identificador.toString()}",
                   style: const pw.TextStyle(fontSize: 15.0),
-                ),
+                  )
+                : pw.Text(
+                  "Contenedor: No disponible",
+                  style: const pw.TextStyle(fontSize: 15.0),
+                  ),
+
               ]),
               pw.SizedBox(height: 10),
               pw.Row(children: [

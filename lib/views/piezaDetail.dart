@@ -39,7 +39,7 @@ class _PiezaDetailState extends State<PiezaDetail> {
         listadoPiezasBuscador = listadoPiezas;
       });
     });
-    searchController.addListener(_checkInput);
+    searchController.addListener(checkInput);
   }
 
   void actualizarPiezas(Pieza pieza) {
@@ -90,13 +90,13 @@ class _PiezaDetailState extends State<PiezaDetail> {
     super.dispose();
   }
 
-  void _checkInput() {
+  void checkInput() {
     setState(() {
       mostrarClearButton = searchController.text.isNotEmpty;
     });
   }
 
-  void _clearSearch() {
+  void limpiarBuscador() {
     setState(() {
       searchController.clear();
       mostrarClearButton = false;
@@ -157,7 +157,7 @@ class _PiezaDetailState extends State<PiezaDetail> {
                         suffixIcon: mostrarClearButton
                                     ? IconButton(
                                     icon: Icon(Icons.clear),
-                                    onPressed: _clearSearch,
+                                    onPressed: limpiarBuscador,
                                     )
                                     : null,
                         ),
@@ -234,10 +234,16 @@ class _PiezaDetailState extends State<PiezaDetail> {
                                 Row(
                                   children: [
                                     Flexible(
-                                        child: Text(
+                                        child: pieza.identificador.toString() != "null" && pieza.identificador.toString() != ""
+                                        ? Text(
                                           pieza.identificador.toString(),
                                           style: const TextStyle(
                                             fontSize: 15,
+                                          ))
+                                        : const Text(
+                                          "Información no disponible",
+                                          style: TextStyle(
+                                            fontSize: 14,
                                           ),
                                         ),
                                     )
@@ -377,7 +383,7 @@ void showError(BuildContext context, Pieza pieza) {
   // set up the AlertDialog
   AlertDialog alert = AlertDialog(
     title: const Text("Error"),
-    content: const Text("Esta pieza no contiene a otras, ¿Te gustaría generar su PDF?"),
+    content: const Text("Esta pieza no contiene a ninguna otra, ¿Te gustaría generar su PDF?"),
     actions: [
       yesButton,
       noButton
