@@ -1,7 +1,5 @@
 import 'dart:convert';
-import 'dart:typed_data';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:pdf/pdf.dart';
 
@@ -30,7 +28,7 @@ class _PDFState extends State<PDF> {
   @override
   void initState() {
     initPDF();
-    getPieza().then((value) {
+    getPiezaView().then((value) {
       setState(() {
         piezaView = value;
       });
@@ -42,7 +40,7 @@ class _PDFState extends State<PDF> {
   }
 
   //Método que devuelve un objeto PiezaView para poder pintar sus datos en el PDF
-  Future<PiezaView> getPieza() async {
+  Future<PiezaView> getPiezaView() async {
     final String codPieza = "${widget.pieza.codPropietario.toString()}${widget.pieza.codPieza.toString()}${widget.pieza.codNIF.toString()}";
 
     var url = Uri.parse(

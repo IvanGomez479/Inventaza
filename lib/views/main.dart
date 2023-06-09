@@ -88,11 +88,14 @@ class _MyAppState extends State<MyApp> {
 
   updateListPiezasBuscador(String text) {
     text = text.toLowerCase();
+    late String codPieza;
     setState(() {
       // Guardamos en una variable el valor de la nueva lista dependiendo de lo que se haya escrito en el buscador
       listadoPiezasBuscador = listadoPiezas.where((pieza) {
-        var codPiezaSearch = pieza.codPieza.toString().toLowerCase();
-        return codPiezaSearch.startsWith(text);
+        codPieza =
+        "${pieza.codPropietario.toString()}-${pieza.codPieza.toString()}-${pieza.codNIF.toString()}";
+        var codPiezaSearch = codPieza.toLowerCase();
+        return codPiezaSearch.contains(text);
       }).toList();
     });
   }
@@ -132,7 +135,7 @@ class _MyAppState extends State<MyApp> {
                       prefixIcon: const Icon(Icons.search),
                       suffixIcon: mostrarClearButton
                           ? IconButton(
-                              icon: Icon(Icons.clear),
+                              icon: const Icon(Icons.clear),
                               onPressed: limpiarBuscador,
                             )
                           : null,
@@ -163,6 +166,12 @@ class _MyAppState extends State<MyApp> {
             )));
   }
 
+  // Función para verificar la existencia de la imagen
+  // Future<bool> _checkImageExists(String imageUrl) async {
+  //   final response = await http.head(Uri.parse(imageUrl));
+  //   return response.statusCode == 200;
+  // }
+
   //método que generará la lista de Cards(Widgets) a partir de una lista de piezas
   List<Widget> listPiezas(List<Pieza> data) {
     List<Widget> piezas = [];
@@ -181,7 +190,9 @@ class _MyAppState extends State<MyApp> {
                   children: <Widget>[
                     Expanded(
                       flex: 5,
-                      child: Image.network(("http://www.ies-azarquiel.es/paco/apiinventario/resources/photo/${pieza.codModelo.toString()}.jpg"))
+                      child: Image.network(
+                          "http://www.ies-azarquiel.es/paco/apiinventario/resources/photo/${pieza.codModelo.toString()}.jpg",
+                      fit: BoxFit.cover),
                     ),
                     Expanded(
                         flex: 5,
@@ -236,19 +247,14 @@ class _MyAppState extends State<MyApp> {
                                 children: <Widget>[
                                   TextButton(
                                     onPressed: () => {
-                                      if (pieza.contenedor == "true")
-                                        {
+                                      if (pieza.contenedor == "true") {
                                           Navigator.push(
                                             context!,
-                                            MaterialPageRoute(
-                                                builder: (context) =>
-                                                    PiezaDetail(pieza: pieza)),
+                                            MaterialPageRoute(builder: (context) => PiezaDetail(pieza: pieza)),
                                           )
                                         }
                                       else
-                                        {
-                                          showError(context!, pieza),
-                                        }
+                                        {showError(context!, pieza)}
                                     },
                                     style: const ButtonStyle(
                                       backgroundColor: MaterialStatePropertyAll(
@@ -268,9 +274,11 @@ class _MyAppState extends State<MyApp> {
                               ),
                             ],
                           ),
-                        )),
+                        )
+                    ),
                   ],
-                )),
+                )
+            ),
           )
         ],
       ));

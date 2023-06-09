@@ -105,11 +105,13 @@ class _PiezaDetailState extends State<PiezaDetail> {
 
   updateListPiezas(String text) {
     text = text.toLowerCase();
+    late String codPieza;
     setState(() {
       // Guardamos en una variable el valor de la nueva lista dependiendo de lo que se haya escrito en el buscador
       listadoPiezasBuscador = listadoPiezas.where((pieza) {
-        var codPiezaSearch = pieza.codPieza.toString().toLowerCase();
-        return codPiezaSearch.startsWith(text);
+        codPieza = "${pieza.codPropietario.toString()}-${pieza.codPieza.toString()}-${pieza.codNIF.toString()}";
+        var codPiezaSearch = codPieza.toLowerCase();
+        return codPiezaSearch.contains(text);
       }).toList();
     });
   }
@@ -156,7 +158,7 @@ class _PiezaDetailState extends State<PiezaDetail> {
                         prefixIcon:const Icon(Icons.search),
                         suffixIcon: mostrarClearButton
                                     ? IconButton(
-                                    icon: Icon(Icons.clear),
+                                    icon: const Icon(Icons.clear),
                                     onPressed: limpiarBuscador,
                                     )
                                     : null,
@@ -316,7 +318,7 @@ class _PiezaDetailState extends State<PiezaDetail> {
   void _scrollTo(int index) {
     _scrollController.animateTo(
       index * 56.0, // Cada elemento tiene una altura estimada de 56.0 píxeles
-      duration: Duration(milliseconds: 500),
+      duration: const Duration(milliseconds: 500),
       curve: Curves.ease,
     );
   }
