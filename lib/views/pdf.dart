@@ -12,8 +12,8 @@ import '../models/Pieza.dart';
 import '../models/PiezaView.dart';
 
 class PDF extends StatefulWidget {
-  late Pieza pieza;
-  PDF({required this.pieza});
+  late PiezaView piezaView;
+  PDF({required this.piezaView});
 
   @override
   State<PDF> createState() => _PDFState();
@@ -23,14 +23,21 @@ class _PDFState extends State<PDF> {
   late pw.Document pdf;
   late PdfImage imagen;
   late Uint8List archivoPdf;
-  late PiezaView? piezaView;
+  //late PiezaView? piezaView;
+  late List<PiezaView> listaPiezasHijas;
 
   @override
   void initState() {
     initPDF();
-    getPiezaView().then((value) {
+    // getPiezaView(widget.pieza).then((value) {
+    //   setState(() {
+    //     piezaView = value;
+    //   });
+    // });
+
+    getPiezasHijas(widget.piezaView).then((value) {
       setState(() {
-        piezaView = value;
+        listaPiezasHijas = value;
       });
     });
   }
@@ -40,41 +47,144 @@ class _PDFState extends State<PDF> {
   }
 
   //Método que devuelve un objeto PiezaView para poder pintar sus datos en el PDF
-  Future<PiezaView> getPiezaView() async {
-    final String codPieza = "${widget.pieza.codPropietario.toString()}${widget.pieza.codPieza.toString()}${widget.pieza.codNIF.toString()}";
+  // Future<PiezaView> getPiezaView(Pieza pieza) async {
+  //   final String codPieza = "${widget.pieza.codPropietario.toString()}${widget.pieza.codPieza.toString()}${widget.pieza.codNIF.toString()}";
+  //
+  //   var url = Uri.parse(
+  //       "http://www.ies-azarquiel.es/paco/apiinventario/pieza/$codPieza");
+  //   final response = await http.get(url);
+  //
+  //   if (response.statusCode == 200) {
+  //     String body = utf8.decode(response.bodyBytes);
+  //
+  //     final jsonData = jsonDecode(body);
+  //
+  //     final piezaView = PiezaView(
+  //       jsonData['pieza']['CodPropietarioPadre'],
+  //       jsonData['pieza']['CodPiezaPadre'],
+  //       jsonData['pieza']['CodPropietario'],
+  //       jsonData['pieza']['CodPieza'],
+  //       jsonData['pieza']['CodNIF'],
+  //       jsonData['pieza']['CodModelo'],
+  //       jsonData['pieza']['Identificador'],
+  //       jsonData['pieza']['Prestable'],
+  //       jsonData['pieza']['Contenedor'],
+  //       jsonData['pieza']['AltaPieza'],
+  //       jsonData['propietario']['DescPropietario'],
+  //       jsonData['modelo']['DescModelo'],
+  //       jsonData['tipo']['DescTipo'],
+  //       jsonData['subtipo']['DescSubTipo'],
+  //       jsonData['fabricante']['NombreFabricante'],
+  //     );
+  //
+  //     return piezaView;
+  //   } else {
+  //     throw Exception("Falló la conexión");
+  //   }
+  // }
 
+  Future<List<PiezaView>> getPiezasHijas(PiezaView piezaView) async {
+    final String codPieza =
+        "${piezaView.codPropietario.toString()}${piezaView.codPieza.toString()}";
     var url = Uri.parse(
-        "http://www.ies-azarquiel.es/paco/apiinventario/pieza/$codPieza");
+        "http://www.ies-azarquiel.es/paco/apiinventario/padre/$codPieza/pieza");
     final response = await http.get(url);
+
+    List<PiezaView> piezas = [];
 
     if (response.statusCode == 200) {
       String body = utf8.decode(response.bodyBytes);
 
       final jsonData = jsonDecode(body);
 
-      final piezaView = PiezaView(
-        jsonData['pieza']['CodPropietarioPadre'],
-        jsonData['pieza']['CodPiezaPadre'],
-        jsonData['pieza']['CodPropietario'],
-        jsonData['pieza']['CodPieza'],
-        jsonData['pieza']['CodNIF'],
-        jsonData['pieza']['CodModelo'],
-        jsonData['pieza']['Identificador'],
-        jsonData['pieza']['Prestable'],
-        jsonData['pieza']['Contenedor'],
-        jsonData['pieza']['AltaPieza'],
-        jsonData['propietario']['DescPropietario'],
-        jsonData['modelo']['DescModelo'],
-        jsonData['tipo']['DescTipo'],
-        jsonData['subtipo']['DescSubTipo'],
-        jsonData['fabricante']['NombreFabricante'],
-      );
-
-      return piezaView;
+      for (var item in jsonData["piezashijas"]) {
+        piezas.add(PiezaView(
+          item['pieza']['CodPropietarioPadre'],
+          item['pieza']['CodPiezaPadre'],
+          item['pieza']['CodPropietario'],
+          item['pieza']['CodPieza'],
+          item['pieza']['CodNIF'],
+          item['pieza']['CodModelo'],
+          item['pieza']['Identificador'],
+          item['pieza']['Prestable'],
+          item['pieza']['Contenedor'],
+          item['pieza']['AltaPieza'],
+          item['propietario']['DescPropietario'],
+          item['modelo']['DescModelo'],
+          item['tipo']['DescTipo'],
+          item['subtipo']['DescSubTipo'],
+          item['fabricante']['NombreFabricante'],
+        ));
+      }
+      return piezas;
     } else {
       throw Exception("Falló la conexión");
     }
   }
+
+  Future<List<PiezaView>> getPruebaPiezasView() async {
+    List<PiezaView> listadoPiezasViewHijas = [];
+
+    getPiezasHijas(widget.piezaView).then((value) {
+      setState(() {
+        listaPiezasHijas = value;
+      });
+    });
+
+    for (var pieza in listaPiezasHijas) {
+      final String codPieza = "${pieza.codPropietario.toString()}${pieza.codPieza.toString()}${pieza.codNIF.toString()}";
+
+      var url = Uri.parse(
+          "http://www.ies-azarquiel.es/paco/apiinventario/pieza/$codPieza");
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        String body = utf8.decode(response.bodyBytes);
+
+        final jsonData = jsonDecode(body);
+
+        listadoPiezasViewHijas.add(PiezaView(
+          jsonData['pieza']['CodPropietarioPadre'],
+          jsonData['pieza']['CodPiezaPadre'],
+          jsonData['pieza']['CodPropietario'],
+          jsonData['pieza']['CodPieza'],
+          jsonData['pieza']['CodNIF'],
+          jsonData['pieza']['CodModelo'],
+          jsonData['pieza']['Identificador'],
+          jsonData['pieza']['Prestable'],
+          jsonData['pieza']['Contenedor'],
+          jsonData['pieza']['AltaPieza'],
+          jsonData['propietario']['DescPropietario'],
+          jsonData['modelo']['DescModelo'],
+          jsonData['tipo']['DescTipo'],
+          jsonData['subtipo']['DescSubTipo'],
+          jsonData['fabricante']['NombreFabricante'],
+        ));
+
+      } else {
+        throw Exception("Falló la conexión");
+      }
+    }
+
+    return listadoPiezasViewHijas;
+
+  }
+
+  // List<PiezaView> getListaPiezaView() {
+  //   final List<PiezaView> listadoPiezasHijas = [];
+  //   getPiezasHijas(widget.piezaView).then((value) {
+  //     setState(() {
+  //       listaPiezasHijas = value;
+  //     });
+  //   });
+  //
+  //   for (var pieza in listaPiezasHijas) {
+  //
+  //     listaPiezasHijas.add(getPiezaView(pieza) as Pieza);
+  //   }
+  //   return listadoPiezasHijas;
+  //
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -100,7 +210,7 @@ class _PDFState extends State<PDF> {
           // Compartimos el PDF a la aplicación que se desee
           await Printing.sharePdf(
               bytes: archivoPdf,
-              filename: 'Pieza-${widget.pieza.codPieza.toString()}.pdf'),
+              filename: 'Pieza: ${widget.piezaView.codPropietario.toString()}-${widget.piezaView.codPieza.toString()}-${widget.piezaView.codNIF.toString()}.pdf'),
         },
         child: const Icon(Icons.share),
       ),
@@ -128,14 +238,256 @@ class _PDFState extends State<PDF> {
     );
   }
 
+  List<pw.Widget> crearPiezasHijasPDF(PiezaView piezaView) {
+    final List<pw.Widget> piezasHijasWidgets = [];
+    getPiezasHijas(piezaView).then((value) {
+      setState(() {
+        listaPiezasHijas = value;
+      });
+    });
+
+    for (int i = 0; i < listaPiezasHijas.length; i++) {
+      piezasHijasWidgets.add(
+        pw.Row(
+            children: [
+              pw.Text(
+                "PIEZA: ${listaPiezasHijas[i].codPropietario.toString()}-${listaPiezasHijas[i].codPieza.toString()}-${listaPiezasHijas[i].codNIF.toString()}",
+                style: const pw.TextStyle(fontSize: 20.0),
+              ),
+            ]
+        ),
+      );
+
+      piezasHijasWidgets.add(
+        pw.Row(
+            children: [
+              pw.Text(
+                "${listaPiezasHijas[i].identificador}",
+                style: const pw.TextStyle(fontSize: 15.0),
+              ),
+            ]
+        ),
+      );
+
+      piezasHijasWidgets.add(
+        pw.Row(
+            children: [
+              pw.Text(
+                "Contenedor: ${listaPiezasHijas[i].codPropietarioPadre}-${listaPiezasHijas[i].codPiezaPadre}",
+                style: const pw.TextStyle(fontSize: 15.0),
+              ),
+            ]
+        ),
+      );
+
+      piezasHijasWidgets.add(
+        pw.Row(
+            children: [
+              pw.Text(
+                "Fecha de alta: ${listaPiezasHijas[i].altaPieza}",
+                style: const pw.TextStyle(fontSize: 15.0),
+              ),
+            ]
+        ),
+      );
+
+      piezasHijasWidgets.add(
+        pw.Center(
+          child: pw.Column(
+            mainAxisAlignment: pw.MainAxisAlignment.center,
+            children: <pw.Widget>[
+              pw.Divider(
+                  color: PdfColor.fromHex("#808080")
+              ),
+            ],
+          ),
+        ),
+      );
+
+      piezasHijasWidgets.add(
+        pw.Row(
+            children: [
+              pw.SizedBox(height: 20.0),
+            ]
+        ),
+      );
+
+      crearPiezasHijasPDF(listaPiezasHijas[i]);
+    }
+
+    return piezasHijasWidgets;
+  }
+
+  Future<List<pw.Widget>> crearPiezasHijasPDF2(PiezaView piezaView) async {
+    final List<pw.Widget> piezasHijasWidgets = [];
+    int contador = 0;
+
+    List<PiezaView> listaPiezasHijas = await getPiezasHijas(piezaView);
+
+    for (int i = 0; i < listaPiezasHijas.length; i++) {
+      piezasHijasWidgets.add(
+        pw.Row(
+            children: [
+              pw.Text(
+                "PIEZA: ${listaPiezasHijas[i].codPropietario.toString()}-${listaPiezasHijas[i].codPieza.toString()}-${listaPiezasHijas[i].codNIF.toString()}",
+                style: const pw.TextStyle(fontSize: 20.0),
+              ),
+            ]
+        ),
+      );
+
+      piezasHijasWidgets.add(
+        pw.Row(
+            children: [
+              pw.Text(
+                "${listaPiezasHijas[i].identificador}",
+                style: const pw.TextStyle(fontSize: 15.0),
+              ),
+            ]
+        ),
+      );
+
+      piezasHijasWidgets.add(
+        pw.Row(
+            children: [
+              pw.Text(
+                "Contenedor: ${listaPiezasHijas[i].codPropietarioPadre}-${listaPiezasHijas[i].codPiezaPadre}",
+                style: const pw.TextStyle(fontSize: 15.0),
+              ),
+            ]
+        ),
+      );
+
+      piezasHijasWidgets.add(
+        pw.Row(
+            children: [
+              pw.Text(
+                "Fecha de alta: ${listaPiezasHijas[i].altaPieza}",
+                style: const pw.TextStyle(fontSize: 15.0),
+              ),
+            ]
+        ),
+      );
+
+      piezasHijasWidgets.add(
+        pw.Center(
+          child: pw.Column(
+            mainAxisAlignment: pw.MainAxisAlignment.center,
+            children: <pw.Widget>[
+              pw.Divider(
+                  color: PdfColor.fromHex("#808080")
+              ),
+            ],
+          ),
+        ),
+      );
+
+      piezasHijasWidgets.add(
+        pw.Row(
+            children: [
+              pw.SizedBox(height: 20.0),
+            ]
+        ),
+      );
+
+
+    }
+    // Llamar recursivamente a crearPiezasHijasPDF
+    piezasHijasWidgets.addAll(await crearPiezasHijasPDF2(listaPiezasHijas[contador]));
+    contador = contador++;
+
+    return piezasHijasWidgets;
+  }
+
   // Método que genera el PDF
   Future<Uint8List> generarPDF() async {
     pdf = pw.Document();
 
     final response = await http.get(Uri.parse(
-        'http://www.ies-azarquiel.es/paco/apiinventario/resources/photo/${widget.pieza.codModelo.toString()}.jpg'));
+        'http://www.ies-azarquiel.es/paco/apiinventario/resources/photo/${widget.piezaView.codModelo.toString()}.jpg'));
     final bytes = response.bodyBytes;
     final image = pw.MemoryImage(bytes);
+
+    List<pw.Widget> piezasHijasWidgets = [];
+
+    crearPiezasHijasPDF2(widget.piezaView).then((value) {
+      setState(() {
+        piezasHijasWidgets = value;
+      });
+    });
+
+    // for (var pieza in listaPiezasHijas) {
+    //   piezasHijasWidgets.add(
+    //     pw.Row(
+    //       children: [
+    //         pw.Text(
+    //           "PIEZA: ${pieza.codPropietario.toString()}-${pieza.codPieza.toString()}-${pieza.codNIF.toString()}",
+    //           style: const pw.TextStyle(fontSize: 20.0),
+    //         ),
+    //       ]
+    //     ),
+    //   );
+    //
+    //   piezasHijasWidgets.add(
+    //     pw.Row(
+    //         children: [
+    //           pw.Text(
+    //             "${pieza.identificador}",
+    //             style: const pw.TextStyle(fontSize: 15.0),
+    //           ),
+    //         ]
+    //     ),
+    //   );
+    //
+    //   piezasHijasWidgets.add(
+    //     pw.Row(
+    //         children: [
+    //           pw.Text(
+    //             "Contenedor: ${pieza.codPropietarioPadre}-${pieza.codPiezaPadre}",
+    //             style: const pw.TextStyle(fontSize: 15.0),
+    //           ),
+    //         ]
+    //     ),
+    //   );
+    //
+    //   piezasHijasWidgets.add(
+    //     pw.Row(
+    //         children: [
+    //           pw.Text(
+    //             "Fecha de alta: ${pieza.altaPieza}",
+    //             style: const pw.TextStyle(fontSize: 15.0),
+    //           ),
+    //         ]
+    //     ),
+    //   );
+    //
+    //   piezasHijasWidgets.add(
+    //     pw.Center(
+    //       child: pw.Column(
+    //         mainAxisAlignment: pw.MainAxisAlignment.center,
+    //         children: <pw.Widget>[
+    //           pw.Divider(
+    //             color: PdfColor.fromHex("#808080")
+    //           ),
+    //         ],
+    //       ),
+    //     ),
+    //   );
+    //
+    //   piezasHijasWidgets.add(
+    //     pw.Row(
+    //         children: [
+    //           pw.SizedBox(height: 20.0),
+    //         ]
+    //     ),
+    //   );
+    //
+    //   getPiezasHijas(pieza).then((value) {
+    //     setState(() {
+    //       listaPiezasHijas = value;
+    //     });
+    //   });
+    // }
 
     pdf.addPage(
       pw.MultiPage(
@@ -155,7 +507,7 @@ class _PDFState extends State<PDF> {
               pw.SizedBox(height: 20),
               pw.Row(children: [
                 pw.Text(
-                  piezaView!.descPropietario.toString(),
+                  widget.piezaView.descPropietario.toString(),
                   style: const pw.TextStyle(
                       fontSize: 20.0,
                   ),
@@ -164,15 +516,15 @@ class _PDFState extends State<PDF> {
               pw.SizedBox(height: 10),
               pw.Row(children: [
                 pw.Text(
-                  "Modelo: ${piezaView?.descModelo.toString()}",
+                  "Modelo: ${widget.piezaView.descModelo.toString()}",
                   style: const pw.TextStyle(fontSize: 15.0),
                 ),
               ]),
               pw.SizedBox(height: 10),
               pw.Row(children: [
-                piezaView?.identificador.toString() != ""
+                widget.piezaView.identificador.toString() != ""
                 ? pw.Text(
-                  "Contenedor: ${piezaView?.identificador.toString()}",
+                  "Contenedor: ${widget.piezaView.identificador.toString()}",
                   style: const pw.TextStyle(fontSize: 15.0),
                   )
                 : pw.Text(
@@ -184,14 +536,14 @@ class _PDFState extends State<PDF> {
               pw.SizedBox(height: 10),
               pw.Row(children: [
                 pw.Text(
-                  "Tipo: ${piezaView?.descTipo.toString()} - ${piezaView?.descSubTipo.toString()}",
+                  "Tipo: ${widget.piezaView.descTipo.toString()} - ${widget.piezaView.descSubTipo.toString()}",
                   style: const pw.TextStyle(fontSize: 15.0),
                 ),
               ]),
               pw.SizedBox(height: 10),
               pw.Row(children: [
                 pw.Text(
-                  "Fabricante: ${piezaView?.nombreFabricante.toString()}",
+                  "Fabricante: ${widget.piezaView?.nombreFabricante.toString()}",
                   style: const pw.TextStyle(fontSize: 15.0),
                 ),
               ]),
@@ -200,6 +552,36 @@ class _PDFState extends State<PDF> {
         ],
       ),
     );
+
+    pdf.addPage(
+      pw.MultiPage(
+        footer: _buildFooter,
+        pageFormat: PdfPageFormat.a4,
+        build: (context) => [
+          pw.Column(
+            children: [
+              pw.Align(
+                alignment: pw.Alignment.centerLeft,
+                child: pw.Text(
+                  "Contenido",
+                  style: pw.TextStyle(
+                      fontSize: 30.0,
+                      fontWeight: pw.FontWeight.bold
+                  ),
+                ),
+              ),
+              pw.SizedBox(height: 20.0),
+              ...piezasHijasWidgets,
+              //...crearPiezasHijasPDF(widget.pieza),
+              //...[crearPiezasHijasPDF2(widget.pieza)],
+            ]
+          ),
+        ],
+      )
+    );
+
+
+
     return pdf.save();
   }
 
@@ -213,7 +595,7 @@ class _PDFState extends State<PDF> {
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
           pw.Text(
-            "PIEZA: ${widget.pieza.codPropietario.toString()}-${widget.pieza.codPiezaPadre.toString()}-${widget.pieza.codNIF.toString()}",
+            "PIEZA: ${widget.piezaView.codPropietario.toString()}-${widget.piezaView.codPiezaPadre.toString()}-${widget.piezaView.codNIF.toString()}",
             style: const pw.TextStyle(
               fontSize: 30,
               color: PdfColors.black,

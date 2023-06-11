@@ -9,11 +9,11 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:pfc_inventaza/views/pdf.dart';
 
 import '../models/Pieza.dart';
+import '../models/PiezaView.dart';
 
 class PiezaDetail extends StatefulWidget {
   static final navKey = GlobalKey<NavigatorState>();
   late Pieza pieza;
-  late List<Pieza> piezas;
 
   PiezaDetail({required this.pieza});
 
@@ -22,10 +22,11 @@ class PiezaDetail extends StatefulWidget {
 }
 
 class _PiezaDetailState extends State<PiezaDetail> {
-  late List<Pieza> listadoPiezas = [];
-  List<Pieza> listadoPiezasBuscador = [];
+  late PiezaView piezaView;
+  late List<PiezaView> listadoPiezas = [];
+  List<PiezaView> listadoPiezasBuscador = [];
   final TextEditingController searchController = TextEditingController();
-  late List<Pieza> data = [];
+  late List<PiezaView> data = [];
   late String? textBuscador = "";
   ScrollController _scrollController = ScrollController();
   bool mostrarClearButton = false;
@@ -33,7 +34,12 @@ class _PiezaDetailState extends State<PiezaDetail> {
   @override
   void initState() {
     super.initState();
-    getPiezasHijas(widget.pieza).then((value) {
+    getPiezaView(widget.pieza).then((value) {
+      setState(() {
+        piezaView = value;
+      });
+    });
+    getPiezasHijas(piezaView!).then((value) {
       setState(() {
         listadoPiezas.addAll(value);
         listadoPiezasBuscador = listadoPiezas;
@@ -42,43 +48,84 @@ class _PiezaDetailState extends State<PiezaDetail> {
     searchController.addListener(checkInput);
   }
 
-  void actualizarPiezas(Pieza pieza) {
+  void actualizarPiezas(PiezaView piezaView) {
     setState(() {
-      widget.pieza = pieza;
-      listadoPiezas = listaPiezasActualizada(widget.pieza);
+      this.piezaView = piezaView;
+      listadoPiezas = listaPiezasActualizada(piezaView);
       searchController.text = "";
     });
   }
 
-  Future<List<Pieza>> getPiezasHijas(Pieza pieza) async {
+  Future<List<PiezaView>> getPiezasHijas(PiezaView piezaView) async {
     final String codPieza =
-        "${pieza.codPropietario.toString()}${pieza.codPieza.toString()}";
+        "${piezaView.codPropietario.toString()}${piezaView.codPieza.toString()}";
     var url = Uri.parse(
         "http://www.ies-azarquiel.es/paco/apiinventario/padre/$codPieza/pieza");
     final response = await http.get(url);
 
-    List<Pieza> piezas = [];
+    List<PiezaView> piezas = [];
 
     if (response.statusCode == 200) {
       String body = utf8.decode(response.bodyBytes);
 
       final jsonData = jsonDecode(body);
 
-      for (var item in jsonData["piezas"]) {
-        piezas.add(Pieza(
-          item["CodPropietarioPadre"],
-          item["CodPiezaPadre"],
-          item["CodPropietario"],
-          item["CodPieza"],
-          item["CodNIF"],
-          item["CodModelo"],
-          item["Identificador"],
-          item["Prestable"],
-          item["Contenedor"],
-          item["AltaPieza"],
+      for (var item in jsonData["piezashijas"]) {
+        piezas.add(PiezaView(
+          item['pieza']['CodPropietarioPadre'],
+          item['pieza']['CodPiezaPadre'],
+          item['pieza']['CodPropietario'],
+          item['pieza']['CodPieza'],
+          item['pieza']['CodNIF'],
+          item['pieza']['CodModelo'],
+          item['pieza']['Identificador'],
+          item['pieza']['Prestable'],
+          item['pieza']['Contenedor'],
+          item['pieza']['AltaPieza'],
+          item['propietario']['DescPropietario'],
+          item['modelo']['DescModelo'],
+          item['tipo']['DescTipo'],
+          item['subtipo']['DescSubTipo'],
+          item['fabricante']['NombreFabricante'],
         ));
       }
       return piezas;
+    } else {
+      throw Exception("Falló la conexión");
+    }
+  }
+
+  Future<PiezaView> getPiezaView(Pieza pieza) async {
+    final String codPieza = "${pieza.codPropietario.toString()}${pieza.codPieza.toString()}${pieza.codNIF.toString()}";
+
+    var url = Uri.parse(
+        "http://www.ies-azarquiel.es/paco/apiinventario/pieza/$codPieza");
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      String body = utf8.decode(response.bodyBytes);
+
+      final jsonData = jsonDecode(body);
+
+      final piezaView = PiezaView(
+        jsonData['pieza']['CodPropietarioPadre'],
+        jsonData['pieza']['CodPiezaPadre'],
+        jsonData['pieza']['CodPropietario'],
+        jsonData['pieza']['CodPieza'],
+        jsonData['pieza']['CodNIF'],
+        jsonData['pieza']['CodModelo'],
+        jsonData['pieza']['Identificador'],
+        jsonData['pieza']['Prestable'],
+        jsonData['pieza']['Contenedor'],
+        jsonData['pieza']['AltaPieza'],
+        jsonData['propietario']['DescPropietario'],
+        jsonData['modelo']['DescModelo'],
+        jsonData['tipo']['DescTipo'],
+        jsonData['subtipo']['DescSubTipo'],
+        jsonData['fabricante']['NombreFabricante'],
+      );
+
+      return piezaView;
     } else {
       throw Exception("Falló la conexión");
     }
@@ -109,7 +156,7 @@ class _PiezaDetailState extends State<PiezaDetail> {
     setState(() {
       // Guardamos en una variable el valor de la nueva lista dependiendo de lo que se haya escrito en el buscador
       listadoPiezasBuscador = listadoPiezas.where((pieza) {
-        codPieza = "${pieza.codPropietario.toString()}-${pieza.codPieza.toString()}-${pieza.codNIF.toString()}";
+        codPieza = "${piezaView?.codPropietario.toString()}-${piezaView?.codPieza.toString()}-${piezaView?.codNIF.toString()}";
         var codPiezaSearch = codPieza.toLowerCase();
         return codPiezaSearch.contains(text);
       }).toList();
@@ -134,12 +181,12 @@ class _PiezaDetailState extends State<PiezaDetail> {
             backgroundColor: Colors.lightBlueAccent,
             flexibleSpace: FlexibleSpaceBar(
               title: Text(
-                  "PIEZA: ${widget.pieza.codPropietario.toString()}-${widget.pieza.codPieza.toString()}-${widget.pieza.codNIF.toString()}"),
+                  "PIEZA: ${piezaView?.codPropietario.toString()}-${piezaView?.codPieza.toString()}-${piezaView?.codNIF.toString()}"),
               centerTitle: true,
               collapseMode: CollapseMode.parallax,
               background: Image(
                 image: NetworkImage(
-                    "http://www.ies-azarquiel.es/paco/apiinventario/resources/photo/${widget.pieza.codModelo.toString()}.jpg"),
+                    "http://www.ies-azarquiel.es/paco/apiinventario/resources/photo/${piezaView?.codModelo.toString()}.jpg"),
                 fit: BoxFit.cover,
               ),
             ),
@@ -167,7 +214,7 @@ class _PiezaDetailState extends State<PiezaDetail> {
                     ),
                   Expanded(
                       child: FutureBuilder(
-                          future: getPiezasHijas(widget.pieza),
+                          future: getPiezasHijas(piezaView!),
                           builder: (BuildContext context, AsyncSnapshot snapshot) {
                             if (snapshot.hasData) {
                               return ListView(
@@ -192,7 +239,7 @@ class _PiezaDetailState extends State<PiezaDetail> {
   }
 
   //Método que genera la lista de Widgets a partir de una lista de objetos Pieza
-  List<Widget> listPiezas(List<Pieza> data) {
+  List<Widget> listPiezas(List<PiezaView> data) {
     List<Widget> piezas = [];
 
     for (var pieza in data) {
@@ -307,8 +354,8 @@ class _PiezaDetailState extends State<PiezaDetail> {
   }
 
   //Método que devuelve una lista de piezas a partir de un objeto Pieza
-  List<Pieza> listaPiezasActualizada(Pieza pieza) {
-    getPiezasHijas(pieza).then((value) {
+  List<PiezaView> listaPiezasActualizada(PiezaView piezaView) {
+    getPiezasHijas(piezaView).then((value) {
       data.addAll(value);
     });
 
@@ -332,7 +379,7 @@ class _PiezaDetailState extends State<PiezaDetail> {
       onPressed: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => PDF(pieza: widget.pieza)),
+          MaterialPageRoute(builder: (context) => PDF(piezaView: piezaView!)),
         );
       },
     );
@@ -364,14 +411,14 @@ class _PiezaDetailState extends State<PiezaDetail> {
 }
 
 // Método que muestra una ventana (AlertDialog) avisando de que la pieza pulsada no tiene piezas hijas
-void showError(BuildContext context, Pieza pieza) {
+void showError(BuildContext context, PiezaView piezaView) {
   Widget yesButton = TextButton(
     child: const Text("Sí"),
     // Si se pulsa el botón, navegamos a la pantalla del PDF
     onPressed: () {
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => PDF(pieza: pieza)),
+        MaterialPageRoute(builder: (context) => PDF(piezaView: piezaView)),
       );
     },
   );

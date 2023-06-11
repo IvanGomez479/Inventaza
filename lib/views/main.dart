@@ -6,6 +6,7 @@ import 'package:pfc_inventaza/views/pdf.dart';
 import 'package:pfc_inventaza/views/piezaDetail.dart';
 
 import '../models/Pieza.dart';
+import '../models/PiezaView.dart';
 
 void main() {
   runApp(const MyApp());
@@ -58,6 +59,7 @@ class _MyAppState extends State<MyApp> {
 
   @override
   void initState() {
+    super.initState();
     getPiezas().then((value) {
       setState(() {
         listadoPiezas.addAll(value);
@@ -287,15 +289,61 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
+Future<PiezaView> getPiezaView(Pieza pieza) async {
+  final String codPieza = "${pieza.codPropietario.toString()}${pieza.codPieza.toString()}${pieza.codNIF.toString()}";
+
+  var url = Uri.parse(
+      "http://www.ies-azarquiel.es/paco/apiinventario/pieza/$codPieza");
+  final response = await http.get(url);
+
+  if (response.statusCode == 200) {
+    String body = utf8.decode(response.bodyBytes);
+
+    final jsonData = jsonDecode(body);
+
+    final piezaView = PiezaView(
+      jsonData['pieza']['CodPropietarioPadre'],
+      jsonData['pieza']['CodPiezaPadre'],
+      jsonData['pieza']['CodPropietario'],
+      jsonData['pieza']['CodPieza'],
+      jsonData['pieza']['CodNIF'],
+      jsonData['pieza']['CodModelo'],
+      jsonData['pieza']['Identificador'],
+      jsonData['pieza']['Prestable'],
+      jsonData['pieza']['Contenedor'],
+      jsonData['pieza']['AltaPieza'],
+      jsonData['propietario']['DescPropietario'],
+      jsonData['modelo']['DescModelo'],
+      jsonData['tipo']['DescTipo'],
+      jsonData['subtipo']['DescSubTipo'],
+      jsonData['fabricante']['NombreFabricante'],
+    );
+
+    return piezaView;
+  } else {
+    throw Exception("Falló la conexión");
+  }
+}
+
+PiezaView convertirAPiezaView(Pieza pieza) {
+  late PiezaView piezaView;
+  getPiezaView(pieza).then((value) {
+    piezaView = value;
+  });
+  return piezaView;
+}
+
 // Método que muestra una ventana (AlertDialog) avisando de que la pieza pulsada no tiene piezas hijas
 void showError(BuildContext context, Pieza pieza) {
+
+
   Widget yesButton = TextButton(
     child: const Text("Sí"),
     // Si se pulsa el botón, navegamos a la pantalla del PDF
     onPressed: () {
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => PDF(pieza: pieza)),
+        MaterialPageRoute(builder: (context) => PDF(piezaView: convertirAPiezaView(pieza))),
       );
     },
   );
