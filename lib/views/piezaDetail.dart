@@ -4,8 +4,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-import 'dart:io';
-import 'package:pdf/widgets.dart' as pw;
 import 'package:pfc_inventaza/views/pdf.dart';
 
 import '../models/Pieza.dart';
@@ -22,7 +20,7 @@ class PiezaDetail extends StatefulWidget {
 }
 
 class _PiezaDetailState extends State<PiezaDetail> {
-  late PiezaView piezaView;
+  late PiezaView? piezaView;
   late List<PiezaView> listadoPiezas = [];
   List<PiezaView> listadoPiezasBuscador = [];
   final TextEditingController searchController = TextEditingController();
@@ -34,17 +32,18 @@ class _PiezaDetailState extends State<PiezaDetail> {
   @override
   void initState() {
     super.initState();
+    piezaView = null;
     getPiezaView(widget.pieza).then((value) {
       setState(() {
         piezaView = value;
       });
     });
-    getPiezasHijas(piezaView!).then((value) {
-      setState(() {
-        listadoPiezas.addAll(value);
-        listadoPiezasBuscador = listadoPiezas;
+      getPiezasHijas(piezaView).then((value) {
+        setState(() {
+          listadoPiezas.addAll(value);
+          listadoPiezasBuscador = listadoPiezas;
+        });
       });
-    });
     searchController.addListener(checkInput);
   }
 
@@ -56,9 +55,9 @@ class _PiezaDetailState extends State<PiezaDetail> {
     });
   }
 
-  Future<List<PiezaView>> getPiezasHijas(PiezaView piezaView) async {
+  Future<List<PiezaView>> getPiezasHijas(PiezaView? piezaView) async {
     final String codPieza =
-        "${piezaView.codPropietario.toString()}${piezaView.codPieza.toString()}";
+        "${piezaView?.codPropietario.toString()}${piezaView?.codPieza.toString()}";
     var url = Uri.parse(
         "http://www.ies-azarquiel.es/paco/apiinventario/padre/$codPieza/pieza");
     final response = await http.get(url);
@@ -222,6 +221,13 @@ class _PiezaDetailState extends State<PiezaDetail> {
                                 children: searchController.text == ""
                                     ? listPiezas(snapshot.data) //Lista de piezas de la Pieza pulsada
                                     : listPiezas(listadoPiezasBuscador), // Lista que depende del buscador
+                              );
+                            } else if (!snapshot.hasData) {
+                              return const Text(
+                                  "Esta pieza está vacía",
+                                style: TextStyle(
+                                  fontSize: 20.0
+                                ),
                               );
                             } else if (snapshot.hasError) {
                               if (kDebugMode) {
