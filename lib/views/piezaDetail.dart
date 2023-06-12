@@ -11,16 +11,15 @@ import '../models/PiezaView.dart';
 
 class PiezaDetail extends StatefulWidget {
   static final navKey = GlobalKey<NavigatorState>();
-  late Pieza pieza;
+  late PiezaView piezaView;
 
-  PiezaDetail({required this.pieza});
+  PiezaDetail({required this.piezaView});
 
   @override
   _PiezaDetailState createState() => _PiezaDetailState();
 }
 
 class _PiezaDetailState extends State<PiezaDetail> {
-  late PiezaView? piezaView;
   late List<PiezaView> listadoPiezas = [];
   List<PiezaView> listadoPiezasBuscador = [];
   final TextEditingController searchController = TextEditingController();
@@ -32,24 +31,18 @@ class _PiezaDetailState extends State<PiezaDetail> {
   @override
   void initState() {
     super.initState();
-    piezaView = null;
-    getPiezaView(widget.pieza).then((value) {
+    getPiezasHijas(widget.piezaView).then((value) {
       setState(() {
-        piezaView = value;
+        listadoPiezas.addAll(value);
+        listadoPiezasBuscador = listadoPiezas;
       });
     });
-      getPiezasHijas(piezaView).then((value) {
-        setState(() {
-          listadoPiezas.addAll(value);
-          listadoPiezasBuscador = listadoPiezas;
-        });
-      });
     searchController.addListener(checkInput);
   }
 
   void actualizarPiezas(PiezaView piezaView) {
     setState(() {
-      this.piezaView = piezaView;
+      widget.piezaView = piezaView;
       listadoPiezas = listaPiezasActualizada(piezaView);
       searchController.text = "";
     });
@@ -94,8 +87,8 @@ class _PiezaDetailState extends State<PiezaDetail> {
     }
   }
 
-  Future<PiezaView> getPiezaView(Pieza pieza) async {
-    final String codPieza = "${pieza.codPropietario.toString()}${pieza.codPieza.toString()}${pieza.codNIF.toString()}";
+  Future<PiezaView> getPiezaView(PiezaView piezaView) async {
+    final String codPieza = "${piezaView.codPropietario.toString()}${piezaView.codPieza.toString()}${piezaView.codNIF.toString()}";
 
     var url = Uri.parse(
         "http://www.ies-azarquiel.es/paco/apiinventario/pieza/$codPieza");
@@ -154,8 +147,8 @@ class _PiezaDetailState extends State<PiezaDetail> {
     late String codPieza;
     setState(() {
       // Guardamos en una variable el valor de la nueva lista dependiendo de lo que se haya escrito en el buscador
-      listadoPiezasBuscador = listadoPiezas.where((pieza) {
-        codPieza = "${piezaView?.codPropietario.toString()}-${piezaView?.codPieza.toString()}-${piezaView?.codNIF.toString()}";
+      listadoPiezasBuscador = listadoPiezas.where((piezaView) {
+        codPieza = "${piezaView.codPropietario.toString()}-${piezaView.codPieza.toString()}-${piezaView.codNIF.toString()}";
         var codPiezaSearch = codPieza.toLowerCase();
         return codPiezaSearch.contains(text);
       }).toList();
@@ -180,12 +173,12 @@ class _PiezaDetailState extends State<PiezaDetail> {
             backgroundColor: Colors.lightBlueAccent,
             flexibleSpace: FlexibleSpaceBar(
               title: Text(
-                  "PIEZA: ${piezaView?.codPropietario.toString()}-${piezaView?.codPieza.toString()}-${piezaView?.codNIF.toString()}"),
+                  "PIEZA: ${widget.piezaView.codPropietario.toString()}-${widget.piezaView.codPieza.toString()}-${widget.piezaView.codNIF.toString()}"),
               centerTitle: true,
               collapseMode: CollapseMode.parallax,
               background: Image(
                 image: NetworkImage(
-                    "http://www.ies-azarquiel.es/paco/apiinventario/resources/photo/${piezaView?.codModelo.toString()}.jpg"),
+                    "http://www.ies-azarquiel.es/paco/apiinventario/resources/photo/${widget.piezaView.codModelo.toString()}.jpg"),
                 fit: BoxFit.cover,
               ),
             ),
@@ -213,7 +206,7 @@ class _PiezaDetailState extends State<PiezaDetail> {
                     ),
                   Expanded(
                       child: FutureBuilder(
-                          future: getPiezasHijas(piezaView!),
+                          future: getPiezasHijas(widget.piezaView),
                           builder: (BuildContext context, AsyncSnapshot snapshot) {
                             if (snapshot.hasData) {
                               return ListView(
@@ -222,18 +215,16 @@ class _PiezaDetailState extends State<PiezaDetail> {
                                     ? listPiezas(snapshot.data) //Lista de piezas de la Pieza pulsada
                                     : listPiezas(listadoPiezasBuscador), // Lista que depende del buscador
                               );
-                            } else if (!snapshot.hasData) {
-                              return const Text(
-                                  "Esta pieza está vacía",
-                                style: TextStyle(
-                                  fontSize: 20.0
-                                ),
-                              );
                             } else if (snapshot.hasError) {
                               if (kDebugMode) {
                                 print(snapshot.error);
                               }
-                              return const Text("Error");
+                              return const Text(
+                                "Esta pieza está vacía",
+                                style: TextStyle(
+                                  fontSize: 20.0
+                                ),
+                              );
                             }
                             return const Center(
                               child: CircularProgressIndicator(),
@@ -385,7 +376,7 @@ class _PiezaDetailState extends State<PiezaDetail> {
       onPressed: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => PDF(piezaView: piezaView!)),
+          MaterialPageRoute(builder: (context) => PDF(piezaView: widget.piezaView)),
         );
       },
     );

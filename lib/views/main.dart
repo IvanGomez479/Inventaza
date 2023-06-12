@@ -21,16 +21,16 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  late List<Pieza> listadoPiezas = [];
-  List<Pieza> listadoPiezasBuscador = [];
+  late List<PiezaView> listadoPiezas = [];
+  List<PiezaView> listadoPiezasBuscador = [];
   final TextEditingController searchController = TextEditingController();
   bool mostrarClearButton = false;
 
-  Future<List<Pieza>> getPiezas() async {
-    var url = Uri.parse("http://www.ies-azarquiel.es/paco/apiinventario/pieza");
+  Future<List<PiezaView>> getPiezas() async {
+    var url = Uri.parse("http://www.ies-azarquiel.es/paco/apiinventario/piezaview");
     final response = await http.get(url);
 
-    List<Pieza> piezas = [];
+    List<PiezaView> piezas = [];
 
     if (response.statusCode == 200) {
       String body = utf8.decode(response.bodyBytes);
@@ -38,17 +38,22 @@ class _MyAppState extends State<MyApp> {
       final jsonData = jsonDecode(body);
 
       for (var item in jsonData["piezas"]) {
-        piezas.add(Pieza(
-          item["CodPropietarioPadre"],
-          item["CodPiezaPadre"],
-          item["CodPropietario"],
-          item["CodPieza"],
-          item["CodNIF"],
-          item["CodModelo"],
-          item["Identificador"],
-          item["Prestable"],
-          item["Contenedor"],
-          item["AltaPieza"],
+        piezas.add(PiezaView(
+          item['pieza']['CodPropietarioPadre'],
+          item['pieza']['CodPiezaPadre'],
+          item['pieza']['CodPropietario'],
+          item['pieza']['CodPieza'],
+          item['pieza']['CodNIF'],
+          item['pieza']['CodModelo'],
+          item['pieza']['Identificador'],
+          item['pieza']['Prestable'],
+          item['pieza']['Contenedor'],
+          item['pieza']['AltaPieza'],
+          item['propietario']['DescPropietario'],
+          item['modelo']['DescModelo'],
+          item['tipo']['DescTipo'],
+          item['subtipo']['DescSubTipo'],
+          item['fabricante']['NombreFabricante'],
         ));
       }
       return piezas;
@@ -175,7 +180,7 @@ class _MyAppState extends State<MyApp> {
   // }
 
   //método que generará la lista de Cards(Widgets) a partir de una lista de piezas
-  List<Widget> listPiezas(List<Pieza> data) {
+  List<Widget> listPiezas(List<PiezaView> data) {
     List<Widget> piezas = [];
     final context = MyApp.navKey.currentState?.overlay?.context;
 
@@ -252,7 +257,7 @@ class _MyAppState extends State<MyApp> {
                                       if (pieza.contenedor == "true") {
                                           Navigator.push(
                                             context!,
-                                            MaterialPageRoute(builder: (context) => PiezaDetail(pieza: pieza)),
+                                            MaterialPageRoute(builder: (context) => PiezaDetail(piezaView: pieza)),
                                           )
                                         }
                                       else
@@ -334,33 +339,23 @@ PiezaView convertirAPiezaView(Pieza pieza) {
 }
 
 // Método que muestra una ventana (AlertDialog) avisando de que la pieza pulsada no tiene piezas hijas
-void showError(BuildContext context, Pieza pieza) {
+void showError(BuildContext context, PiezaView pieza) {
 
 
-  Widget yesButton = TextButton(
-    child: const Text("Sí"),
+  Widget okButton = TextButton(
+    child: const Text("Ok"),
     // Si se pulsa el botón, navegamos a la pantalla del PDF
     onPressed: () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => PDF(piezaView: convertirAPiezaView(pieza))),
-      );
-    },
-  );
-  Widget noButton = TextButton(
-    child: const Text("No"),
-    onPressed: () {
-      Navigator.pop(context);
+      Navigator.of(context).pop();
     },
   );
 
   // set up the AlertDialog
   AlertDialog alert = AlertDialog(
     title: const Text("Error"),
-    content: const Text("Esta pieza no contiene a ninguna otra, ¿Te gustaría generar su PDF?"),
+    content: const Text("Esta pieza no contiene a ninguna otra"),
     actions: [
-      yesButton,
-      noButton
+      okButton,
     ],
   );
 
