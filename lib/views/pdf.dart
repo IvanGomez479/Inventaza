@@ -9,11 +9,10 @@ import 'package:printing/printing.dart';
 import 'package:http/http.dart' as http;
 
 import '../models/Pieza.dart';
-import '../models/PiezaView.dart';
 
 class PDF extends StatefulWidget {
-  late PiezaView piezaView;
-  PDF({required this.piezaView});
+  late Pieza pieza;
+  PDF({super.key, required this.pieza});
 
   @override
   State<PDF> createState() => _PDFState();
@@ -23,10 +22,8 @@ class _PDFState extends State<PDF> {
   late pw.Document pdf;
   late PdfImage imagen;
   late Uint8List archivoPdf;
-  //late PiezaView? piezaView;
-  late List<PiezaView> listaPiezasHijas = [];
+  late List<Pieza> listaPiezasHijas = [];
   late List<pw.Widget> piezasHijasWidgets = [];
-  late List<pw.Widget> nuevosWidgets = [];
   bool isLoading = true;
 
   @override
@@ -35,14 +32,10 @@ class _PDFState extends State<PDF> {
     initPDF();
   }
 
-  // Future<void> initPDF() async {
-  //   archivoPdf = await generarPDF();
-  // }
-
   Future<void> initPDF() async {
     try {
       archivoPdf = await generarPDF();
-      listaPiezasHijas = await getPiezasHijas(widget.piezaView);
+      listaPiezasHijas = await getPiezasHijas(widget.pieza);
       piezasHijasWidgets = await crearPiezasHijasPDFPrueba(listaPiezasHijas);
     } catch (e) {
       print('Error en initPDF: $e');
@@ -53,14 +46,14 @@ class _PDFState extends State<PDF> {
     }
   }
 
-  Future<List<PiezaView>> getPiezasHijas(PiezaView piezaView) async {
+  Future<List<Pieza>> getPiezasHijas(Pieza pieza) async {
     final String codPieza =
-        "${piezaView.codPropietario.toString()}${piezaView.codPieza.toString()}";
+        "${pieza.codPropietario.toString()}${pieza.codPieza.toString()}";
     var url = Uri.parse(
         "http://www.ies-azarquiel.es/paco/apiinventario/padre/$codPieza/pieza");
     final response = await http.get(url);
 
-    List<PiezaView> piezas = [];
+    List<Pieza> piezas = [];
 
     if (response.statusCode == 200) {
       String body = utf8.decode(response.bodyBytes);
@@ -69,7 +62,7 @@ class _PDFState extends State<PDF> {
 
       if (jsonData["piezashijas"] != null) {
         for (var item in jsonData["piezashijas"]) {
-          piezas.add(PiezaView(
+          piezas.add(Pieza(
             item['pieza']['CodPropietarioPadre'],
             item['pieza']['CodPiezaPadre'],
             item['pieza']['CodPropietario'],
@@ -131,7 +124,7 @@ class _PDFState extends State<PDF> {
           await Printing.sharePdf(
               bytes: archivoPdf,
               filename:
-                  'Pieza: ${widget.piezaView.codPropietario.toString()}-${widget.piezaView.codPieza.toString()}-${widget.piezaView.codNIF.toString()}.pdf'),
+                  'Pieza: ${widget.pieza.codPropietario.toString()}-${widget.pieza.codPieza.toString()}-${widget.pieza.codNIF.toString()}.pdf'),
         },
         child: const Icon(Icons.share),
       ),
@@ -166,14 +159,13 @@ class _PDFState extends State<PDF> {
     );
   }
 
-  Future<List<pw.Widget>> crearPiezasHijasPDFPrueba(List<PiezaView> listaPiezasHijas) async {
+  Future<List<pw.Widget>> crearPiezasHijasPDFPrueba(List<Pieza> listaPiezasHijas) async {
 
-    for (PiezaView piezaView in listaPiezasHijas) {
-      print('Pieza: ${piezaView.codPropietario}-${piezaView.codPieza}');
+    for (Pieza pieza in listaPiezasHijas) {
       piezasHijasWidgets.add(
         pw.Row(children: [
           pw.Text(
-            "PIEZA: ${piezaView.codPropietario.toString()}-${piezaView.codPieza.toString()}-${piezaView.codNIF.toString()}",
+            "PIEZA: ${pieza.codPropietario.toString()}-${pieza.codPieza.toString()}-${pieza.codNIF.toString()}",
             style: const pw.TextStyle(fontSize: 15.5),
           ),
         ]),
@@ -181,7 +173,7 @@ class _PDFState extends State<PDF> {
       piezasHijasWidgets.add(
         pw.Row(children: [
           pw.Text(
-            piezaView.identificador.toString(),
+            pieza.identificador.toString(),
             style: const pw.TextStyle(fontSize: 15.5),
           ),
         ]),
@@ -189,7 +181,7 @@ class _PDFState extends State<PDF> {
       piezasHijasWidgets.add(
         pw.Row(children: [
           pw.Text(
-            "Modelo: ${piezaView.descModelo.toString()}",
+            "Modelo: ${pieza.descModelo.toString()}",
             style: const pw.TextStyle(fontSize: 15.5),
           ),
         ]),
@@ -197,7 +189,7 @@ class _PDFState extends State<PDF> {
       piezasHijasWidgets.add(
         pw.Row(children: [
           pw.Text(
-            "Tipo: ${piezaView.descTipo.toString()} - ${piezaView.descSubTipo.toString()}",
+            "Tipo: ${pieza.descTipo.toString()} - ${pieza.descSubTipo.toString()}",
             style: const pw.TextStyle(fontSize: 15.5),
           ),
         ]),
@@ -205,7 +197,7 @@ class _PDFState extends State<PDF> {
       piezasHijasWidgets.add(
         pw.Row(children: [
           pw.Text(
-            "Fabricante: ${piezaView.nombreFabricante.toString()}",
+            "Fabricante: ${pieza.nombreFabricante.toString()}",
             style: const pw.TextStyle(fontSize: 15.5),
           ),
         ]),
@@ -216,12 +208,9 @@ class _PDFState extends State<PDF> {
         ]),
       );
 
-      if (piezaView.contenedor == "true") {
-        List<PiezaView> listaPiezasHijasDeHija = await getPiezasHijas(piezaView);
-        print('  Piezas hijas:');
+      if (pieza.contenedor == "true") {
+        List<Pieza> listaPiezasHijasDeHija = await getPiezasHijas(pieza);
         await crearPiezasHijasPDFPrueba(listaPiezasHijasDeHija);
-
-        //crearPiezasHijasPDFPrueba(listaPiezasHijasDeHija);
       }
     }
 
@@ -234,11 +223,11 @@ class _PDFState extends State<PDF> {
     pdf = pw.Document();
 
     final response = await http.get(Uri.parse(
-        'http://www.ies-azarquiel.es/paco/apiinventario/resources/photo/${widget.piezaView.codModelo.toString()}.jpg'));
+        'http://www.ies-azarquiel.es/paco/apiinventario/resources/photo/${widget.pieza.codModelo.toString()}.jpg'));
     final bytes = response.bodyBytes;
     final image = pw.MemoryImage(bytes);
 
-    listaPiezasHijas = await getPiezasHijas(widget.piezaView);
+    listaPiezasHijas = await getPiezasHijas(widget.pieza);
     piezasHijasWidgets = await crearPiezasHijasPDFPrueba(listaPiezasHijas);
 
     pdf.addPage(
@@ -259,7 +248,7 @@ class _PDFState extends State<PDF> {
               pw.SizedBox(height: 20),
               pw.Row(children: [
                 pw.Text(
-                  widget.piezaView.descPropietario.toString(),
+                  widget.pieza.descPropietario.toString(),
                   style: const pw.TextStyle(
                     fontSize: 20.0,
                   ),
@@ -268,15 +257,15 @@ class _PDFState extends State<PDF> {
               pw.SizedBox(height: 10),
               pw.Row(children: [
                 pw.Text(
-                  "Modelo: ${widget.piezaView.descModelo.toString()}",
+                  "Modelo: ${widget.pieza.descModelo.toString()}",
                   style: const pw.TextStyle(fontSize: 15.0),
                 ),
               ]),
               pw.SizedBox(height: 10),
               pw.Row(children: [
-                widget.piezaView.identificador.toString() != ""
+                widget.pieza.identificador.toString() != ""
                     ? pw.Text(
-                        "Contenedor: ${widget.piezaView.identificador.toString()}",
+                        "Contenedor: ${widget.pieza.identificador.toString()}",
                         style: const pw.TextStyle(fontSize: 15.0),
                       )
                     : pw.Text(
@@ -287,14 +276,14 @@ class _PDFState extends State<PDF> {
               pw.SizedBox(height: 10),
               pw.Row(children: [
                 pw.Text(
-                  "Tipo: ${widget.piezaView.descTipo.toString()} - ${widget.piezaView.descSubTipo.toString()}",
+                  "Tipo: ${widget.pieza.descTipo.toString()} - ${widget.pieza.descSubTipo.toString()}",
                   style: const pw.TextStyle(fontSize: 15.0),
                 ),
               ]),
               pw.SizedBox(height: 10),
               pw.Row(children: [
                 pw.Text(
-                  "Fabricante: ${widget.piezaView.nombreFabricante.toString()}",
+                  "Fabricante: ${widget.pieza.nombreFabricante.toString()}",
                   style: const pw.TextStyle(fontSize: 15.0),
                 ),
               ]),
@@ -304,7 +293,7 @@ class _PDFState extends State<PDF> {
       ),
     );
 
-    if (widget.piezaView.contenedor == "true" && piezasHijasWidgets.length < 700) {
+    if (widget.pieza.contenedor == "true" && piezasHijasWidgets.length < 700) {
       pdf.addPage(pw.MultiPage(
         footer: _buildFooter,
         pageFormat: PdfPageFormat.a4,
@@ -328,19 +317,6 @@ class _PDFState extends State<PDF> {
     return pdf.save();
   }
 
-  pw.Widget _buildContent() {
-    if (piezasHijasWidgets == []) {
-      return pw.Container(
-        alignment: pw.Alignment.center,
-        child: pw.Spacer(flex: 1),
-      );
-    } else {
-      return pw.Column(
-        children: piezasHijasWidgets
-      );
-    }
-  }
-
   // Cabecera del PDF (título)
   pw.Widget _buildHeader(pw.Context context) {
     return pw.Padding(
@@ -351,7 +327,7 @@ class _PDFState extends State<PDF> {
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
           pw.Text(
-            "PIEZA: ${widget.piezaView.codPropietario.toString()}-${widget.piezaView.codPieza.toString()}-${widget.piezaView.codNIF.toString()}",
+            "PIEZA: ${widget.pieza.codPropietario.toString()}-${widget.pieza.codPieza.toString()}-${widget.pieza.codNIF.toString()}",
             style: const pw.TextStyle(
               fontSize: 30,
               color: PdfColors.black,

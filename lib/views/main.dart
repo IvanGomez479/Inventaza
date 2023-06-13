@@ -6,7 +6,6 @@ import 'package:pfc_inventaza/views/pdf.dart';
 import 'package:pfc_inventaza/views/piezaDetail.dart';
 
 import '../models/Pieza.dart';
-import '../models/PiezaView.dart';
 
 void main() {
   runApp(const MyApp());
@@ -21,16 +20,16 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  late List<PiezaView> listadoPiezas = [];
-  List<PiezaView> listadoPiezasBuscador = [];
+  late List<Pieza> listadoPiezas = [];
+  List<Pieza> listadoPiezasBuscador = [];
   final TextEditingController searchController = TextEditingController();
   bool mostrarClearButton = false;
 
-  Future<List<PiezaView>> getPiezas() async {
+  Future<List<Pieza>> getPiezas() async {
     var url = Uri.parse("http://www.ies-azarquiel.es/paco/apiinventario/piezaview");
     final response = await http.get(url);
 
-    List<PiezaView> piezas = [];
+    List<Pieza> piezas = [];
 
     if (response.statusCode == 200) {
       String body = utf8.decode(response.bodyBytes);
@@ -38,7 +37,7 @@ class _MyAppState extends State<MyApp> {
       final jsonData = jsonDecode(body);
 
       for (var item in jsonData["piezas"]) {
-        piezas.add(PiezaView(
+        piezas.add(Pieza(
           item['pieza']['CodPropietarioPadre'],
           item['pieza']['CodPiezaPadre'],
           item['pieza']['CodPropietario'],
@@ -155,7 +154,7 @@ class _MyAppState extends State<MyApp> {
                       builder: (BuildContext context, AsyncSnapshot snapshot) {
                         if (snapshot.hasData) {
                           return ListView(
-                            // Dependiendo de si se ha escrito algo en el buscador, cargaremos una lista u otra
+                            // Cargaremos la lista que dependa de lo que se haya escrito en el buscador
                             children: listPiezas(listadoPiezasBuscador),
                           );
                         } else if (snapshot.hasError) {
@@ -180,7 +179,7 @@ class _MyAppState extends State<MyApp> {
   // }
 
   //método que generará la lista de Cards(Widgets) a partir de una lista de piezas
-  List<Widget> listPiezas(List<PiezaView> data) {
+  List<Widget> listPiezas(List<Pieza> data) {
     List<Widget> piezas = [];
     final context = MyApp.navKey.currentState?.overlay?.context;
 
@@ -257,7 +256,7 @@ class _MyAppState extends State<MyApp> {
                                       if (pieza.contenedor == "true") {
                                           Navigator.push(
                                             context!,
-                                            MaterialPageRoute(builder: (context) => PiezaDetail(piezaView: pieza)),
+                                            MaterialPageRoute(builder: (context) => PiezaDetail(pieza: pieza)),
                                           )
                                         }
                                       else
@@ -294,7 +293,7 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
-Future<PiezaView> getPiezaView(PiezaView pieza) async {
+Future<Pieza> getPieza(Pieza pieza) async {
   final String codPieza = "${pieza.codPropietario.toString()}${pieza.codPieza.toString()}${pieza.codNIF.toString()}";
 
   var url = Uri.parse(
@@ -306,7 +305,7 @@ Future<PiezaView> getPiezaView(PiezaView pieza) async {
 
     final jsonData = jsonDecode(body);
 
-    final piezaView = PiezaView(
+    final pieza = Pieza(
       jsonData['pieza']['CodPropietarioPadre'],
       jsonData['pieza']['CodPiezaPadre'],
       jsonData['pieza']['CodPropietario'],
@@ -324,21 +323,21 @@ Future<PiezaView> getPiezaView(PiezaView pieza) async {
       jsonData['fabricante']['NombreFabricante'],
     );
 
-    return piezaView;
+    return pieza;
   } else {
     throw Exception("Falló la conexión");
   }
 }
 
 // Método que muestra una ventana (AlertDialog) avisando de que la pieza pulsada no tiene piezas hijas
-void showError(BuildContext context, PiezaView pieza) {
+void showError(BuildContext context, Pieza pieza) {
   Widget yesButton = TextButton(
     child: const Text("Sí"),
     // Si se pulsa el botón, navegamos a la pantalla del PDF
     onPressed: () {
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => PDF(piezaView: pieza)),
+        MaterialPageRoute(builder: (context) => PDF(pieza: pieza)),
       );
     },
   );

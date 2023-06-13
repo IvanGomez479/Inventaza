@@ -10,6 +10,11 @@ class Pieza {
   String? prestable;
   String? contenedor;
   String? altaPieza;
+  String? descPropietario;
+  String? descModelo;
+  String? descTipo;
+  String? descSubTipo;
+  String? nombreFabricante;
 
   Pieza(
       this.codPropietarioPadre,
@@ -22,5 +27,10 @@ class Pieza {
       this.prestable,
       this.contenedor,
       this.altaPieza,
+      this.descPropietario,
+      this.descModelo,
+      this.descTipo,
+      this.descSubTipo,
+      this.nombreFabricante,
       );
 }
