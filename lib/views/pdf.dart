@@ -27,17 +27,12 @@ class _PDFState extends State<PDF> {
   late List<PiezaView> listaPiezasHijas = [];
   late List<pw.Widget> piezasHijasWidgets = [];
   late List<pw.Widget> nuevosWidgets = [];
-  int contador = 0;
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
     initPDF();
-    // getPiezaView(widget.pieza).then((value) {
-    //   setState(() {
-    //     piezaView = value;
-    //   });
-    // });
   }
 
   // Future<void> initPDF() async {
@@ -51,12 +46,18 @@ class _PDFState extends State<PDF> {
       piezasHijasWidgets = await crearPiezasHijasPDFPrueba(listaPiezasHijas);
     } catch (e) {
       print('Error en initPDF: $e');
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
   Future<List<PiezaView>> getPiezasHijas(PiezaView piezaView) async {
-    final String codPieza = "${piezaView.codPropietario.toString()}${piezaView.codPieza.toString()}";
-    var url = Uri.parse("http://www.ies-azarquiel.es/paco/apiinventario/padre/$codPieza/pieza");
+    final String codPieza =
+        "${piezaView.codPropietario.toString()}${piezaView.codPieza.toString()}";
+    var url = Uri.parse(
+        "http://www.ies-azarquiel.es/paco/apiinventario/padre/$codPieza/pieza");
     final response = await http.get(url);
 
     List<PiezaView> piezas = [];
@@ -88,7 +89,6 @@ class _PDFState extends State<PDF> {
         }
       }
       return piezas;
-
     } else {
       throw Exception("Falló la conexión");
     }
@@ -118,31 +118,35 @@ class _PDFState extends State<PDF> {
           // Compartimos el PDF a la aplicación que se desee
           await Printing.sharePdf(
               bytes: archivoPdf,
-              filename: 'Pieza: ${widget.piezaView.codPropietario.toString()}-${widget.piezaView.codPieza.toString()}-${widget.piezaView.codNIF.toString()}.pdf'),
+              filename:
+                  'Pieza: ${widget.piezaView.codPropietario.toString()}-${widget.piezaView.codPieza.toString()}-${widget.piezaView.codNIF.toString()}.pdf'),
         },
         child: const Icon(Icons.share),
       ),
       body: SafeArea(
+        child: Visibility(
+          visible: !isLoading,
           child: SingleChildScrollView(
-        child: Column(
-          children: [
-            SizedBox(
-              height: 540,
-              width: double.maxFinite,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 15,
-                  vertical: 15,
+            child: Column(
+              children: [
+                SizedBox(
+                  height: 540,
+                  width: double.maxFinite,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 15,
+                      vertical: 15,
+                    ),
+                    child: PdfPreview(
+                      build: (format) => archivoPdf,
+                      useActions: false,
+                    ),
+                  ),
                 ),
-                child: PdfPreview(
-                  build: (format) => archivoPdf,
-                  useActions: false,
-                ),
-              ),
+              ],
             ),
-          ],
-        ),
-      )),
+          ),
+        ))
     );
   }
 
@@ -164,32 +168,64 @@ class _PDFState extends State<PDF> {
 
     for (PiezaView piezaView in listaPiezasHijas) {
       print('Pieza: ${piezaView.codPropietario}-${piezaView.codPieza}');
-      contador++;
       piezasHijasWidgets.add(
-        pw.Row(
-            children: [
-              pw.Text(
-                "PIEZA: ${piezaView.codPropietario.toString()}-${piezaView.codPieza.toString()}-${piezaView.codNIF.toString()}",
-                style: const pw.TextStyle(fontSize: 20.0),
-              ),
-            ]
-        ),
+        pw.Row(children: [
+          pw.Text(
+            "PIEZA: ${piezaView.codPropietario.toString()}-${piezaView.codPieza.toString()}-${piezaView.codNIF.toString()}",
+            style: const pw.TextStyle(fontSize: 15.5),
+          ),
+        ]),
+      );
+      piezasHijasWidgets.add(
+        pw.Row(children: [
+          pw.Text(
+            piezaView.identificador.toString(),
+            style: const pw.TextStyle(fontSize: 15.5),
+          ),
+        ]),
+      );
+      piezasHijasWidgets.add(
+        pw.Row(children: [
+          pw.Text(
+            "Modelo: ${piezaView.descModelo.toString()}",
+            style: const pw.TextStyle(fontSize: 15.5),
+          ),
+        ]),
+      );
+      piezasHijasWidgets.add(
+        pw.Row(children: [
+          pw.Text(
+            "Tipo: ${piezaView.descTipo.toString()} - ${piezaView.descSubTipo.toString()}",
+            style: const pw.TextStyle(fontSize: 15.5),
+          ),
+        ]),
+      );
+      piezasHijasWidgets.add(
+        pw.Row(children: [
+          pw.Text(
+            "Fabricante: ${piezaView.nombreFabricante.toString()}",
+            style: const pw.TextStyle(fontSize: 15.5),
+          ),
+        ]),
+      );
+      piezasHijasWidgets.add(
+        pw.Row(children: [
+          pw.SizedBox(height: 21.0)
+        ]),
       );
 
       if (piezaView.contenedor == "true") {
         List<PiezaView> listaPiezasHijasDeHija = await getPiezasHijas(piezaView);
-        print('Subpiezas:');
-        crearPiezasHijasPDFPrueba(listaPiezasHijasDeHija);
-        contador++;
-
+        print('  Piezas hijas:');
+        await crearPiezasHijasPDFPrueba(listaPiezasHijasDeHija);
 
         //crearPiezasHijasPDFPrueba(listaPiezasHijasDeHija);
       }
     }
 
-    print(contador);
     return piezasHijasWidgets;
   }
+
 
   // Método que genera el PDF
   Future<Uint8List> generarPDF() async {
@@ -199,6 +235,9 @@ class _PDFState extends State<PDF> {
         'http://www.ies-azarquiel.es/paco/apiinventario/resources/photo/${widget.piezaView.codModelo.toString()}.jpg'));
     final bytes = response.bodyBytes;
     final image = pw.MemoryImage(bytes);
+
+    listaPiezasHijas = await getPiezasHijas(widget.piezaView);
+    piezasHijasWidgets = await crearPiezasHijasPDFPrueba(listaPiezasHijas);
 
     //List<pw.Widget> piezasHijasWidgets = [];
 
@@ -226,7 +265,7 @@ class _PDFState extends State<PDF> {
                 pw.Text(
                   widget.piezaView.descPropietario.toString(),
                   style: const pw.TextStyle(
-                      fontSize: 20.0,
+                    fontSize: 20.0,
                   ),
                 ),
               ]),
@@ -240,15 +279,14 @@ class _PDFState extends State<PDF> {
               pw.SizedBox(height: 10),
               pw.Row(children: [
                 widget.piezaView.identificador.toString() != ""
-                ? pw.Text(
-                  "Contenedor: ${widget.piezaView.identificador.toString()}",
-                  style: const pw.TextStyle(fontSize: 15.0),
-                  )
-                : pw.Text(
-                  "Contenedor: No disponible",
-                  style: const pw.TextStyle(fontSize: 15.0),
-                  ),
-
+                    ? pw.Text(
+                        "Contenedor: ${widget.piezaView.identificador.toString()}",
+                        style: const pw.TextStyle(fontSize: 15.0),
+                      )
+                    : pw.Text(
+                        "Contenedor: No disponible",
+                        style: const pw.TextStyle(fontSize: 15.0),
+                      ),
               ]),
               pw.SizedBox(height: 10),
               pw.Row(children: [
@@ -270,32 +308,41 @@ class _PDFState extends State<PDF> {
       ),
     );
 
-    pdf.addPage(
-      pw.MultiPage(
+    if (widget.piezaView.contenedor == "true") {
+      pdf.addPage(pw.MultiPage(
         footer: _buildFooter,
         pageFormat: PdfPageFormat.a4,
         build: (context) => [
-          pw.Column(
-            children: [
-              pw.Align(
-                alignment: pw.Alignment.centerLeft,
-                child: pw.Text(
-                  "Contenido",
-                  style: pw.TextStyle(
-                      fontSize: 30.0,
-                      fontWeight: pw.FontWeight.bold
-                  ),
-                ),
+          pw.Column(children: [
+            pw.Align(
+              alignment: pw.Alignment.centerLeft,
+              child: pw.Text(
+                "Contenido",
+                style: pw.TextStyle(
+                    fontSize: 30.0, fontWeight: pw.FontWeight.bold),
               ),
-              pw.SizedBox(height: 20.0),
-              ...piezasHijasWidgets,
-            ]
-          ),
+            ),
+            pw.SizedBox(height: 20.0),
+            ...piezasHijasWidgets
+          ]),
         ],
-      )
-    );
+      ));
+    }
 
     return pdf.save();
+  }
+
+  pw.Widget _buildContent() {
+    if (piezasHijasWidgets == []) {
+      return pw.Container(
+        alignment: pw.Alignment.center,
+        child: pw.Spacer(flex: 1),
+      );
+    } else {
+      return pw.Column(
+        children: piezasHijasWidgets
+      );
+    }
   }
 
   // Cabecera del PDF (título)
@@ -308,7 +355,7 @@ class _PDFState extends State<PDF> {
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
           pw.Text(
-            "PIEZA: ${widget.piezaView.codPropietario.toString()}-${widget.piezaView.codPiezaPadre.toString()}-${widget.piezaView.codNIF.toString()}",
+            "PIEZA: ${widget.piezaView.codPropietario.toString()}-${widget.piezaView.codPieza.toString()}-${widget.piezaView.codNIF.toString()}",
             style: const pw.TextStyle(
               fontSize: 30,
               color: PdfColors.black,

@@ -62,24 +62,26 @@ class _PiezaDetailState extends State<PiezaDetail> {
 
       final jsonData = jsonDecode(body);
 
-      for (var item in jsonData["piezashijas"]) {
-        piezas.add(PiezaView(
-          item['pieza']['CodPropietarioPadre'],
-          item['pieza']['CodPiezaPadre'],
-          item['pieza']['CodPropietario'],
-          item['pieza']['CodPieza'],
-          item['pieza']['CodNIF'],
-          item['pieza']['CodModelo'],
-          item['pieza']['Identificador'],
-          item['pieza']['Prestable'],
-          item['pieza']['Contenedor'],
-          item['pieza']['AltaPieza'],
-          item['propietario']['DescPropietario'],
-          item['modelo']['DescModelo'],
-          item['tipo']['DescTipo'],
-          item['subtipo']['DescSubTipo'],
-          item['fabricante']['NombreFabricante'],
-        ));
+      if (jsonData["piezashijas"] != null) {
+        for (var item in jsonData["piezashijas"]) {
+          piezas.add(PiezaView(
+            item['pieza']['CodPropietarioPadre'],
+            item['pieza']['CodPiezaPadre'],
+            item['pieza']['CodPropietario'],
+            item['pieza']['CodPieza'],
+            item['pieza']['CodNIF'],
+            item['pieza']['CodModelo'],
+            item['pieza']['Identificador'],
+            item['pieza']['Prestable'],
+            item['pieza']['Contenedor'],
+            item['pieza']['AltaPieza'],
+            item['propietario']['DescPropietario'],
+            item['modelo']['DescModelo'],
+            item['tipo']['DescTipo'],
+            item['subtipo']['DescSubTipo'],
+            item['fabricante']['NombreFabricante'],
+          ));
+        }
       }
       return piezas;
     } else {
