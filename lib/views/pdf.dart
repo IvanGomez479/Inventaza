@@ -99,6 +99,12 @@ class _PDFState extends State<PDF> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
           title: const Text("PDF"),
           flexibleSpace: Container(
             decoration: const BoxDecoration(
@@ -109,7 +115,13 @@ class _PDFState extends State<PDF> {
                   Colors.lightBlueAccent,
                   Colors.cyanAccent
                 ])),
-          )),
+          ),
+          iconTheme: const IconThemeData(
+            color: Colors.white,
+          ),
+          actionsIconTheme: const IconThemeData.fallback(),
+
+      ),
       //Botón flotante para compartir el PDF
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.lightBlueAccent,
@@ -126,11 +138,14 @@ class _PDFState extends State<PDF> {
       body: SafeArea(
         child: Visibility(
           visible: !isLoading,
+          replacement: const Center(
+            child: CircularProgressIndicator(),
+          ),
           child: SingleChildScrollView(
             child: Column(
               children: [
                 SizedBox(
-                  height: 540,
+                  height: 600,
                   width: double.maxFinite,
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
@@ -145,24 +160,11 @@ class _PDFState extends State<PDF> {
                 ),
               ],
             ),
-          ),
-        ))
+          ), // show a loading indicator
+        )
+      )
     );
   }
-
-  // void crearPiezasHijasPDF(List<PiezaView> listaPiezasHijas) async {
-  //
-  //   for (PiezaView piezaView in listaPiezasHijas) {
-  //     print('Código de la pieza: ${piezaView.codPieza}');
-  //
-  //     if (piezaView.contenedor == "true") {
-  //       List<PiezaView> listaPiezasHijasDeHija = await getPiezasHijas(piezaView);
-  //
-  //       print('Subpiezas:');
-  //       crearPiezasHijasPDF(listaPiezasHijasDeHija);
-  //     }
-  //   }
-  // }
 
   Future<List<pw.Widget>> crearPiezasHijasPDFPrueba(List<PiezaView> listaPiezasHijas) async {
 
@@ -239,12 +241,6 @@ class _PDFState extends State<PDF> {
     listaPiezasHijas = await getPiezasHijas(widget.piezaView);
     piezasHijasWidgets = await crearPiezasHijasPDFPrueba(listaPiezasHijas);
 
-    //List<pw.Widget> piezasHijasWidgets = [];
-
-    //this.piezasHijasWidgets = piezasHijasWidgets;
-
-    //crearPiezasHijasPDF(listaPiezasHijas);
-
     pdf.addPage(
       pw.MultiPage(
         header: _buildHeader,
@@ -308,7 +304,7 @@ class _PDFState extends State<PDF> {
       ),
     );
 
-    if (widget.piezaView.contenedor == "true") {
+    if (widget.piezaView.contenedor == "true" && piezasHijasWidgets.length < 700) {
       pdf.addPage(pw.MultiPage(
         footer: _buildFooter,
         pageFormat: PdfPageFormat.a4,

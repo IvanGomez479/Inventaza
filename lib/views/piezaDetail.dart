@@ -169,6 +169,10 @@ class _PiezaDetailState extends State<PiezaDetail> {
         ),
         body: CustomScrollView(slivers: [
           SliverAppBar(
+            iconTheme: const IconThemeData(
+              color: Colors.white,
+            ),
+            actionsIconTheme: const IconThemeData.fallback(),
             expandedHeight: 400,
             pinned: true,
             scrolledUnderElevation: 10.0,
@@ -378,7 +382,11 @@ class _PiezaDetailState extends State<PiezaDetail> {
       onPressed: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => PDF(piezaView: widget.piezaView)),
+          MaterialPageRoute(
+              builder: (context) => PDF(piezaView: widget.piezaView),
+              settings: const RouteSettings(name: '/piezaDetail'),
+          ),
+
         );
       },
     );

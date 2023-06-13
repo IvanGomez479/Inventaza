@@ -294,7 +294,7 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
-Future<PiezaView> getPiezaView(Pieza pieza) async {
+Future<PiezaView> getPiezaView(PiezaView pieza) async {
   final String codPieza = "${pieza.codPropietario.toString()}${pieza.codPieza.toString()}${pieza.codNIF.toString()}";
 
   var url = Uri.parse(
@@ -330,35 +330,33 @@ Future<PiezaView> getPiezaView(Pieza pieza) async {
   }
 }
 
-PiezaView convertirAPiezaView(Pieza pieza) {
-  late PiezaView piezaView;
-  getPiezaView(pieza).then((value) {
-    piezaView = value;
-  });
-  return piezaView;
-}
-
 // Método que muestra una ventana (AlertDialog) avisando de que la pieza pulsada no tiene piezas hijas
 void showError(BuildContext context, PiezaView pieza) {
-
-
-  Widget okButton = TextButton(
-    child: const Text("Ok"),
+  Widget yesButton = TextButton(
+    child: const Text("Sí"),
     // Si se pulsa el botón, navegamos a la pantalla del PDF
     onPressed: () {
-      Navigator.of(context).pop();
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => PDF(piezaView: pieza)),
+      );
     },
   );
-
+  Widget noButton = TextButton(
+    child: const Text("No"),
+    onPressed: () {
+      Navigator.pop(context);
+    },
+  );
   // set up the AlertDialog
   AlertDialog alert = AlertDialog(
     title: const Text("Error"),
-    content: const Text("Esta pieza no contiene a ninguna otra"),
+    content: const Text("Esta pieza no contiene a ninguna otra, ¿Te gustaría generar su PDF?"),
     actions: [
-      okButton,
+      yesButton,
+      noButton
     ],
   );
-
   // show the dialog
   showDialog(
     context: context,
