@@ -27,6 +27,7 @@ class _PiezaDetailState extends State<PiezaDetail> {
   ScrollController _scrollController = ScrollController();
   bool mostrarClearButton = false;
 
+  ///{@macro initState}
   @override
   void initState() {
     super.initState();
@@ -39,6 +40,7 @@ class _PiezaDetailState extends State<PiezaDetail> {
     searchController.addListener(checkInput);
   }
 
+  ///Método que recarga la información de la interfaz con la información de una pieza dada
   void actualizarPiezas(Pieza pieza) {
     setState(() {
       widget.pieza = pieza;
@@ -47,11 +49,12 @@ class _PiezaDetailState extends State<PiezaDetail> {
     });
   }
 
+  ///{@template getPiezasHijas}
+  ///Método que realiza una petición GET a la API para obtener un listado de piezas hijas a partir de una pieza dada
+  ///{@endtemplate}
   Future<List<Pieza>> getPiezasHijas(Pieza? pieza) async {
-    final String codPieza =
-        "${pieza?.codPropietario.toString()}${pieza?.codPieza.toString()}";
-    var url = Uri.parse(
-        "http://www.ies-azarquiel.es/paco/apiinventario/padre/$codPieza/pieza");
+    final String codPieza = "${pieza?.codPropietario.toString()}${pieza?.codPieza.toString()}";
+    var url = Uri.parse("http://www.ies-azarquiel.es/paco/apiinventario/padre/$codPieza/pieza");
     final response = await http.get(url);
 
     List<Pieza> piezas = [];
@@ -88,54 +91,21 @@ class _PiezaDetailState extends State<PiezaDetail> {
     }
   }
 
-  Future<Pieza> getPieza(Pieza pieza) async {
-    final String codPieza = "${pieza.codPropietario.toString()}${pieza.codPieza.toString()}${pieza.codNIF.toString()}";
-
-    var url = Uri.parse(
-        "http://www.ies-azarquiel.es/paco/apiinventario/pieza/$codPieza");
-    final response = await http.get(url);
-
-    if (response.statusCode == 200) {
-      String body = utf8.decode(response.bodyBytes);
-
-      final jsonData = jsonDecode(body);
-
-      final pieza = Pieza(
-        jsonData['pieza']['CodPropietarioPadre'],
-        jsonData['pieza']['CodPiezaPadre'],
-        jsonData['pieza']['CodPropietario'],
-        jsonData['pieza']['CodPieza'],
-        jsonData['pieza']['CodNIF'],
-        jsonData['pieza']['CodModelo'],
-        jsonData['pieza']['Identificador'],
-        jsonData['pieza']['Prestable'],
-        jsonData['pieza']['Contenedor'],
-        jsonData['pieza']['AltaPieza'],
-        jsonData['propietario']['DescPropietario'],
-        jsonData['modelo']['DescModelo'],
-        jsonData['tipo']['DescTipo'],
-        jsonData['subtipo']['DescSubTipo'],
-        jsonData['fabricante']['NombreFabricante'],
-      );
-
-      return pieza;
-    } else {
-      throw Exception("Falló la conexión");
-    }
-  }
-
+  ///{@macro dispose}
   @override
   void dispose() {
     searchController.dispose();
     super.dispose();
   }
 
+  ///{@macro checkInput}
   void checkInput() {
     setState(() {
       mostrarClearButton = searchController.text.isNotEmpty;
     });
   }
 
+  ///{@macro limpiarBuscador}
   void limpiarBuscador() {
     setState(() {
       searchController.clear();
@@ -143,6 +113,7 @@ class _PiezaDetailState extends State<PiezaDetail> {
     });
   }
 
+  ///{@macro updateListPiezas}
   updateListPiezas(String text) {
     text = text.toLowerCase();
     late String codPieza;
@@ -218,7 +189,7 @@ class _PiezaDetailState extends State<PiezaDetail> {
                                 controller: _scrollController,
                                 children: searchController.text == ""
                                     ? listPiezas(snapshot.data) //Lista de piezas de la Pieza pulsada
-                                    : listPiezas(listadoPiezasBuscador), // Lista que depende del buscador
+                                    : listPiezas(listadoPiezasBuscador), //Lista que depende del buscador
                               );
                             } else if (snapshot.hasError) {
                               if (kDebugMode) {
@@ -234,13 +205,16 @@ class _PiezaDetailState extends State<PiezaDetail> {
                             return const Center(
                               child: CircularProgressIndicator(),
                             );
-                          }))
+                          })
+                  )
                 ],
-              )),
-        ]));
+              )
+          ),
+        ])
+    );
   }
 
-  //Método que genera la lista de Widgets a partir de una lista de objetos Pieza
+  ///{@macro listPiezas}
   List<Widget> listPiezas(List<Pieza> data) {
     List<Widget> piezas = [];
 
@@ -355,7 +329,7 @@ class _PiezaDetailState extends State<PiezaDetail> {
     return piezas;
   }
 
-  //Método que devuelve una lista de piezas a partir de un objeto Pieza
+  ///Método que devuelve una lista de piezas a partir de un objeto Pieza dado
   List<Pieza> listaPiezasActualizada(Pieza pieza) {
     getPiezasHijas(pieza).then((value) {
       data.addAll(value);
@@ -364,6 +338,7 @@ class _PiezaDetailState extends State<PiezaDetail> {
     return data;
   }
 
+  ///Método que, al actualizarse la lista, hará un scroll automático hasta la posición dada
   void _scrollTo(int index) {
     _scrollController.animateTo(
       index * 56.0, // Cada elemento tiene una altura estimada de 56.0 píxeles
@@ -372,7 +347,7 @@ class _PiezaDetailState extends State<PiezaDetail> {
     );
   }
 
-  // Método que muestra una ventana que pregunta si se desea continuar a la siguiente pantalla
+  ///Método que muestra una ventana que pregunta si se desea continuar a la siguiente pantalla para generar el PDF de la pieza
   void showDialogPDF(BuildContext context) {
     // Creamos los botones
     Widget yesButton = TextButton(
@@ -416,7 +391,7 @@ class _PiezaDetailState extends State<PiezaDetail> {
   }
 }
 
-// Método que muestra una ventana (AlertDialog) avisando de que la pieza pulsada no tiene piezas hijas
+///{@macro showError}
 void showError(BuildContext context, Pieza pieza) {
   Widget yesButton = TextButton(
     child: const Text("Sí"),

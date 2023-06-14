@@ -25,6 +25,7 @@ class _MyAppState extends State<MyApp> {
   final TextEditingController searchController = TextEditingController();
   bool mostrarClearButton = false;
 
+  ///Método que realiza una petición GET a la API para obtener un listado de todas las piezas
   Future<List<Pieza>> getPiezas() async {
     var url = Uri.parse("http://www.ies-azarquiel.es/paco/apiinventario/piezaview");
     final response = await http.get(url);
@@ -61,6 +62,9 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
+  ///{@template initState}
+  ///Método que se ejecuta al iniciar la pantalla
+  ///{@endtemplate}
   @override
   void initState() {
     super.initState();
@@ -73,18 +77,27 @@ class _MyAppState extends State<MyApp> {
     searchController.addListener(checkInput);
   }
 
+  ///{@template dispose}
+  ///Método que realizará una limpieza de los recursos utilizados por el controlador
+  ///{@endtemplate}
   @override
   void dispose() {
     searchController.dispose();
     super.dispose();
   }
 
+  ///{@template checkInput}
+  ///Método que comprueba si la barra de búsqueda está vacía para poner o no el botón de limpiar
+  ///{@endtemplate}
   void checkInput() {
     setState(() {
       mostrarClearButton = searchController.text.isNotEmpty;
     });
   }
 
+  ///{@template limpiarBuscador}
+  ///Método que limpia la barra de búsqueda
+  ///{@endtemplate}
   void limpiarBuscador() {
     setState(() {
       searchController.clear();
@@ -92,6 +105,9 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
+  ///{@template updateListPiezasBuscador}
+  ///Método que actualiza la lista de piezas en función de lo que se escriba en la barra de búsqueda
+  ///{@endtemplate}
   updateListPiezasBuscador(String text) {
     text = text.toLowerCase();
     late String codPieza;
@@ -172,13 +188,9 @@ class _MyAppState extends State<MyApp> {
             )));
   }
 
-  // Función para verificar la existencia de la imagen
-  // Future<bool> _checkImageExists(String imageUrl) async {
-  //   final response = await http.head(Uri.parse(imageUrl));
-  //   return response.statusCode == 200;
-  // }
-
-  //método que generará la lista de Cards(Widgets) a partir de una lista de piezas
+  ///{@template listPiezas}
+  ///Método que generará la lista de Cards(Widgets) a partir de una lista de piezas
+  ///{@endtemplate}
   List<Widget> listPiezas(List<Pieza> data) {
     List<Widget> piezas = [];
     final context = MyApp.navKey.currentState?.overlay?.context;
@@ -293,43 +305,10 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
-Future<Pieza> getPieza(Pieza pieza) async {
-  final String codPieza = "${pieza.codPropietario.toString()}${pieza.codPieza.toString()}${pieza.codNIF.toString()}";
-
-  var url = Uri.parse(
-      "http://www.ies-azarquiel.es/paco/apiinventario/pieza/$codPieza");
-  final response = await http.get(url);
-
-  if (response.statusCode == 200) {
-    String body = utf8.decode(response.bodyBytes);
-
-    final jsonData = jsonDecode(body);
-
-    final pieza = Pieza(
-      jsonData['pieza']['CodPropietarioPadre'],
-      jsonData['pieza']['CodPiezaPadre'],
-      jsonData['pieza']['CodPropietario'],
-      jsonData['pieza']['CodPieza'],
-      jsonData['pieza']['CodNIF'],
-      jsonData['pieza']['CodModelo'],
-      jsonData['pieza']['Identificador'],
-      jsonData['pieza']['Prestable'],
-      jsonData['pieza']['Contenedor'],
-      jsonData['pieza']['AltaPieza'],
-      jsonData['propietario']['DescPropietario'],
-      jsonData['modelo']['DescModelo'],
-      jsonData['tipo']['DescTipo'],
-      jsonData['subtipo']['DescSubTipo'],
-      jsonData['fabricante']['NombreFabricante'],
-    );
-
-    return pieza;
-  } else {
-    throw Exception("Falló la conexión");
-  }
-}
-
-// Método que muestra una ventana (AlertDialog) avisando de que la pieza pulsada no tiene piezas hijas
+///{@template showError}
+///Método que muestra una ventana (AlertDialog) avisando de que la pieza pulsada no tiene piezas hijas,
+///dando la posibilidad de generar directamente su PDF
+///{@endtemplate}
 void showError(BuildContext context, Pieza pieza) {
   Widget yesButton = TextButton(
     child: const Text("Sí"),

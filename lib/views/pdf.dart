@@ -26,12 +26,14 @@ class _PDFState extends State<PDF> {
   late List<pw.Widget> piezasHijasWidgets = [];
   bool isLoading = true;
 
+  ///{@macro initState}
   @override
   void initState() {
     super.initState();
     initPDF();
   }
 
+  ///Método que inicializará el PDF
   Future<void> initPDF() async {
     try {
       archivoPdf = await generarPDF();
@@ -46,11 +48,10 @@ class _PDFState extends State<PDF> {
     }
   }
 
+  ///{@macro getPiezasHijas}
   Future<List<Pieza>> getPiezasHijas(Pieza pieza) async {
-    final String codPieza =
-        "${pieza.codPropietario.toString()}${pieza.codPieza.toString()}";
-    var url = Uri.parse(
-        "http://www.ies-azarquiel.es/paco/apiinventario/padre/$codPieza/pieza");
+    final String codPieza = "${pieza.codPropietario.toString()}${pieza.codPieza.toString()}";
+    var url = Uri.parse("http://www.ies-azarquiel.es/paco/apiinventario/padre/$codPieza/pieza");
     final response = await http.get(url);
 
     List<Pieza> piezas = [];
@@ -107,7 +108,8 @@ class _PDFState extends State<PDF> {
                     colors: <Color>[
                   Colors.lightBlueAccent,
                   Colors.cyanAccent
-                ])),
+                ])
+            ),
           ),
           iconTheme: const IconThemeData(
             color: Colors.white,
@@ -159,6 +161,7 @@ class _PDFState extends State<PDF> {
     );
   }
 
+  ///Método que, a través de recursividad, devolverá una lista de Widgets con toda la información de las piezas hijas de una pieza
   Future<List<pw.Widget>> crearPiezasHijasPDFPrueba(List<Pieza> listaPiezasHijas) async {
 
     for (Pieza pieza in listaPiezasHijas) {
@@ -218,7 +221,7 @@ class _PDFState extends State<PDF> {
   }
 
 
-  // Método que genera el PDF
+  ///Método que genera el PDF
   Future<Uint8List> generarPDF() async {
     pdf = pw.Document();
 
@@ -317,7 +320,7 @@ class _PDFState extends State<PDF> {
     return pdf.save();
   }
 
-  // Cabecera del PDF (título)
+  ///Cabecera del PDF (título)
   pw.Widget _buildHeader(pw.Context context) {
     return pw.Padding(
       padding: const pw.EdgeInsets.symmetric(
@@ -348,7 +351,7 @@ class _PDFState extends State<PDF> {
     );
   }
 
-  // Pie de página del PDF (número de página)
+  ///Pie de página del PDF (número de página)
   pw.Widget _buildFooter(pw.Context context) {
     return pw.Padding(
       padding: const pw.EdgeInsets.symmetric(
