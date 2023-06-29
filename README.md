@@ -4,9 +4,9 @@ This my final project of the DAM degree, which is a Flutter application that man
 
 ## Technologies 
 
-Framework: Flutter <br> <img src="https://web-strapi.mrmilu.com/uploads/flutter_logo_470e9f7491.png" width="300"> <br>
-Programming language: Dart <br> <img src="https://upload.wikimedia.org/wikipedia/commons/c/c6/Dart_logo.png" width="300"> <br>
-IDE: Android Studio <br> <img src="https://1.bp.blogspot.com/-LgTa-xDiknI/X4EflN56boI/AAAAAAAAPuk/24YyKnqiGkwRS9-_9suPKkfsAwO4wHYEgCLcBGAsYHQ/s0/image9.png" width="300">
+Framework: Flutter <br> <img src="https://web-strapi.mrmilu.com/uploads/flutter_logo_470e9f7491.png" width="100"> <br>
+Programming language: Dart <br> <img src="https://upload.wikimedia.org/wikipedia/commons/c/c6/Dart_logo.png" width="100"> <br>
+IDE: Android Studio <br> <img src="https://1.bp.blogspot.com/-LgTa-xDiknI/X4EflN56boI/AAAAAAAAPuk/24YyKnqiGkwRS9-_9suPKkfsAwO4wHYEgCLcBGAsYHQ/s0/image9.png" width="100">
 
 ## First screen
 
