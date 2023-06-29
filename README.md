@@ -4,9 +4,9 @@ This my final project of the DAM degree, which is a Flutter application that man
 
 ## Technologies 
 
-Framework: Flutter <img src="https://www.google.com/search?rlz=1C1CHBD_esES971ES971&q=flutter+logo&tbm=isch&sa=X&ved=2ahUKEwifoNTf8-j_AhXPY6QEHTMUAAYQ0pQJegQIERAB&biw=1536&bih=746&dpr=1.25#imgrc=lXAye8q0kMX8eM" width="300">
-Programming language: Dart <img src="https://www.google.com/search?q=dart+logo&tbm=isch&ved=2ahUKEwjvgcWQ9Oj_AhWnoScCHeyMDBkQ2-cCegQIABAA&oq=dart+logo&gs_lcp=CgNpbWcQAzIHCAAQigUQQzIHCAAQigUQQzIFCAAQgAQyBggAEAcQHjIGCAAQBxAeMgYIABAHEB4yBggAEAcQHjIGCAAQBxAeMgYIABAHEB4yBggAEAcQHjoICAAQgAQQsQM6CggAEIoFELEDEENQ5AVYggxgsA1oAHAAeACAAVyIAYkEkgEBN5gBAKABAaoBC2d3cy13aXotaW1nwAEB&sclient=img&ei=T7KdZK-eLafDnsEP7JmyyAE&bih=746&biw=1536&rlz=1C1CHBD_esES971ES971#imgrc=0mlCrv3AUDk8PM" width="300">
-IDE: Android Studio <img src="https://www.google.com/search?q=android+studio+logo&&tbm=isch&ved=2ahUKEwipqcXh8-j_AhUMmycCHYEuASIQ2-cCegQIABAA&oq=android+studio+logo&gs_lcp=CgNpbWcQAzIFCAAQgAQyBQgAEIAEMgUIABCABDIFCAAQgAQyBQgAEIAEMgUIABCABDIGCAAQBxAeMgYIABAHEB4yBggAEAcQHjIGCAAQBxAeOgcIABCKBRBDOggIABCABBCxAzoICAAQCBAHEB5Q_ghY8CRg-CloBHAAeACAAYgBiAHvCpIBBDE4LjGYAQCgAQGqAQtnd3Mtd2l6LWltZ8ABAQ&sclient=img&ei=7bGdZOn-Coy2nsEPgd2EkAI&bih=746&biw=1536&rlz=1C1CHBD_esES971ES971#imgrc=0Br6XDQFyMnXiM" width="300">
+Framework: Flutter <img src="https://web-strapi.mrmilu.com/uploads/flutter_logo_470e9f7491.png" width="300">
+Programming language: Dart <img src="https://upload.wikimedia.org/wikipedia/commons/c/c6/Dart_logo.png" width="300">
+IDE: Android Studio <img src="https://1.bp.blogspot.com/-LgTa-xDiknI/X4EflN56boI/AAAAAAAAPuk/24YyKnqiGkwRS9-_9suPKkfsAwO4wHYEgCLcBGAsYHQ/s0/image9.png" width="300">
 
 ## First screen
 
