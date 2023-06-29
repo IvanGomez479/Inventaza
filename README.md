@@ -6,7 +6,7 @@ This my final project of the DAM degree, which is a Flutter application that man
 
 The first screen consists of a list of all the pieces with a search bar to filter by a piece code.
 
-![image](https://github.com/IvanGomez479/Inventaza/assets/137070584/842c041e-5847-4da5-9b3a-a8896fa38af8)
+<img src="https://github.com/IvanGomez479/Inventaza/assets/137070584/842c041e-5847-4da5-9b3a-a8896fa38af8" alt="" width="300">
 
 ![image](https://github.com/IvanGomez479/Inventaza/assets/137070584/51bd5f0d-db87-4a34-a5e1-f790367fb84a)
 
